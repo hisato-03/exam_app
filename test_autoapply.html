@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Ruby AutoApply テスト</title>
+
+  <!-- ▼ ルビ定義（語句と読み） -->
+  <meta name="profaim-ruby" base="東京都" text="とうきょうと">
+  <meta name="profaim-ruby" base="人口" text="じんこう">
+  <meta name="profaim-ruby" base="小学校" text="しょうがっこう">
+  <meta name="profaim-ruby" base="算数" text="さんすう">
+
+  <!-- ▼ ルビ対象範囲の指定 -->
+  <meta name="profaim-ruby-area" target="BODY">
+
+  <!-- ▼ ライブラリ読み込み -->
+  <script src="jquery-3.7.1.js"></script>
+  <script src="profaim-ruby-autoapply-1.0.1.js"></script>
+</head>
+<body>
+  <p>東京都の人口は多いです。</p>
+  <p>小学校では算数を学びます。</p>
+
+  <!-- ▼ ルビ処理の実行 -->
+  <script>
+    $(document).ready(function() {
+      prfmRubyAutoApply();
+    });
+  </script>
+</body>
+</html>
