@@ -69,9 +69,8 @@ echo "    <span class='user-label no-ruby'>現在のユーザー: " . htmlspecia
 if ($user !== "guest") {
     echo '    <a href="history.php" class="btn btn-history no-ruby">学習履歴を見る</a>';
     echo '    <a href="logout.php" class="btn btn-logout no-ruby">ログアウト</a>';
-} else {
-    echo '    <a href="login.php" class="btn btn-login no-ruby">ログイン画面へ</a>';
 }
+// guest の場合はリンクを表示しない
 echo '  </div>';
 echo '</div>';
 
@@ -122,32 +121,39 @@ try {
       $examNumber   = $row[9] ?? '';
 
       echo "<div class='question-card'>";
-      echo "<form class='qa-form' action='save_history.php' method='post'>";
-      echo "<div class='question-text content-ruby'><strong>問題:</strong> " . htmlspecialchars($questionText) . "</div>";
+echo "<form class='qa-form' action='save_history.php' method='post'>";
 
-      echo "<input type='hidden' name='question_id' value='" . htmlspecialchars($questionId) . "'>";
-      echo "<input type='hidden' name='exam_number' value='" . htmlspecialchars($examNumber) . "'>";
-      echo "<input type='hidden' name='correct' value='" . htmlspecialchars($correctIndex) . "'>";
-      echo "<input type='hidden' name='subject' value='" . htmlspecialchars($subject) . "'>";  
+// 問題文
+echo "<div class='question-text content-ruby'><strong>問題:</strong> " . htmlspecialchars($questionText) . "</div>";
 
-      echo "<ul class='choices content-ruby'>";
-      for ($i = 1; $i <= 5; $i++) {
-        $choiceText = htmlspecialchars($choices[$i-1] ?? '');
+// hiddenフィールド（必須データ）
+echo "<input type='hidden' name='question_id' value='" . htmlspecialchars($questionId) . "'>";
+echo "<input type='hidden' name='exam_number' value='" . htmlspecialchars($examNumber) . "'>";
+echo "<input type='hidden' name='correct' value='" . htmlspecialchars($correctIndex) . "'>";
+echo "<input type='hidden' name='subject' value='" . htmlspecialchars($subject) . "'>";  
+
+// 選択肢
+echo "<ul class='choices content-ruby'>";
+for ($i = 1; $i <= 5; $i++) {
+    $choiceText = htmlspecialchars($choices[$i-1] ?? '');
+    if ($choiceText !== '') {
         echo "<li><label><input type='radio' name='answer' value='{$i}' required> {$choiceText}</label></li>";
-      }
-      echo "</ul>";
+    }
+}
+echo "</ul>";
 
-      // ▼ 中央寄せしたボタンコンテナ（構造を元に戻す）
-      echo "<div class='btn-container'>";
-      echo "<button type='submit' class='btn-answer no-ruby'>回答を送信</button>";
-      echo "<button type='button' class='btn-explanation no-ruby' data-index='{$index}'>解説を表示</button>";
-      echo "</div>";
+// ボタンコンテナ
+echo "<div class='btn-container'>";
+echo "<button type='submit' class='btn-answer no-ruby'>回答を送信</button>";
+echo "<button type='button' class='btn-explanation no-ruby' data-index='{$index}'>解説を表示</button>";
+echo "</div>";
 
-      // ▼ 解説はボタンのすぐ後ろに置く（元の構造を維持）
-      echo "<div class='answer'></div>";
-      echo "<div id='explanation{$index}' class='explanation content-ruby' style='display:none;'><strong>解説:</strong> " . htmlspecialchars($explanation) . "</div>";
+// 解説
+echo "<div class='answer'></div>";
+echo "<div id='explanation{$index}' class='explanation content-ruby' style='display:none;'><strong>解説:</strong> " . htmlspecialchars($explanation) . "</div>";
 
-      echo "</form></div>";
+echo "</form></div>";
+
     }
   }
 } catch (Exception $e) {

@@ -86,9 +86,11 @@ $(function(){
     }
   }
 
-  // ▼ 初期表示時：カード全体にふりがな適用
+  // ▼ 初期表示時：問題文・選択肢・解説文すべてにふりがな適用
   applyRuby(".question-card");
   applyRuby(".question-card *");
+  applyRuby(".explanation");
+  applyRuby(".explanation *");
   applyRubyVisibility();
 
   // ▼ UI要素（no-ruby クラス付き）はふりがなを削除して固定表示
@@ -111,68 +113,14 @@ $(function(){
   window.totalAnswered = 0;
   window.subjectStats = {};
 
-  // ▼ 答えを確認（イベント委譲）
-  /*$(document).on("submit", ".qa-form", function(e){
-    e.preventDefault();
-    const form = $(this);
-    const index = parseInt(form.data("index"), 10);
-    const correct = parseInt(form.data("correct"), 10);
-    const subject = $("#subject").val();
-
-    const selected = form.find(`input[name="answer${index}"]:checked`).val();
-    const resultDiv = document.getElementById(`result${index}`);
-
-    if (!selected) {
-      resultDiv.textContent = "選択肢を選んでください。";
-      resultDiv.style.color = "orange";
-      return false;
-    }
-
-    if (form.data("answered") === true) {
-      resultDiv.textContent = "この問題はすでに回答済みです。";
-      resultDiv.style.color = "gray";
-      return false;
-    }
-
-    const userAnswer = parseInt(selected, 10);
-
-    if (userAnswer === correct) {
-      resultDiv.textContent = "正解です！";
-      resultDiv.style.color = "#2196f3";
-      window.correctCount++;
-      window.subjectStats[subject] = window.subjectStats[subject] || { correct: 0, total: 0 };
-      window.subjectStats[subject].correct++;
-    } else {
-      resultDiv.textContent = `不正解です。正解は 選択肢${correct} です。`;
-      resultDiv.style.color = "red";
-      window.subjectStats[subject] = window.subjectStats[subject] || { correct: 0, total: 0 };
-    }
-
-    window.totalAnswered++;
-    window.subjectStats[subject].total++;
-    form.data("answered", true);
-
-    updateScore();
-    updateSubjectStats();
-    return false;
-  });
-  */
- 
-  // ▼ 解説を表示（イベント委譲）
+  // ▼ 解説を表示（開閉のみ）
   $(document).ready(function() {
-  // 解説ボタンのクリックイベント
-  $(".btn-explanation").on("click", function() {
-    const idx = $(this).data("index");   // ボタンに埋め込んだ data-index を取得
-    $("#explanation" + idx).toggle();    // idで直接指定して開閉
+    $(".btn-explanation").on("click", function() {
+      const idx = $(this).data("index");
+      $("#explanation" + idx).toggle();  // 開閉のみ、ふりがなは既に付いている
+    });
   });
 
-  // ふりがな表示切り替え（既存の処理がある場合はそのまま）
-  $("#toggleRubyBtn").on("click", function() {
-    $(".content-ruby").toggleClass("show-ruby");
-  });
-});
-
-  
   // ▼ 正解率表示
   window.updateScore = function(){
     const scoreDiv = document.getElementById("score");

@@ -4,60 +4,50 @@ error_reporting(E_ALL);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $username = trim($_POST["username"]);
-    $filePath = __DIR__ . '/users.csv';
-    $rows = [];
 
-    if (($fp = fopen($filePath, "r")) !== false) {
-        while (($data = fgetcsv($fp)) !== false) {
-            $rows[] = $data;
-        }
-        fclose($fp);
-    }
+    // DB接続情報を環境変数から取得
+    $host = getenv('DB_HOST') ?: 'db';
+    $db   = getenv('DB_NAME') ?: 'exam_app';
+    $user = getenv('DB_USER') ?: 'exam_user';
+    $pass = getenv('DB_PASS') ?: 'exam_pass';
 
-    // ユーザー名のバリデーション: 半角英数字のみ、3〜12文字
-    if (!preg_match('/^[a-zA-Z0-9]{3,12}$/', $username)) {
-        $message = "ユーザー名は半角英数字で3〜12文字以内にしてください。";
-    } else {
-        // 既存ユーザー名チェック
-        $exists = false;
-        foreach ($rows as $row) {
-            if ($row[0] === $username) {
-                $exists = true;
-                break;
-            }
-        }
+    try {
+        $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
 
-        if ($exists) {
-            $message = "ユーザー名「{$username}」は既に登録されています。別の名前を入力してください。";
+        // ユーザー名のバリデーション: 半角英数字のみ、3〜12文字
+        if (!preg_match('/^[a-zA-Z0-9]{3,12}$/', $username)) {
+            $message = "ユーザー名は半角英数字で3〜12文字以内にしてください。";
         } else {
-            $assignedPassword = null;
-            // 空欄ユーザー名の最初の行を探す
-            for ($i = 1; $i < count($rows); $i++) { // 0行目はヘッダー
-                if ($rows[$i][0] === "") {
-                    $rows[$i][0] = $username;
-                    $assignedPassword = $rows[$i][1];
-                    break;
-                }
-            }
+            // 既存ユーザー名チェック
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+            $stmt->execute([$username]);
+            $exists = $stmt->fetchColumn() > 0;
 
-            if ($assignedPassword) {
-                // CSVを上書き保存
-                if (($fp = fopen($filePath, "w")) !== false) {
-                    foreach ($rows as $row) {
-                        fputcsv($fp, $row);
-                    }
-                    fclose($fp);
-                }
+            if ($exists) {
+                $message = "ユーザー名「{$username}」は既に登録されています。別の名前を入力してください。";
+            } else {
+                // パスワードを自動生成（例: ランダム8文字）
+                $assignedPassword = bin2hex(random_bytes(4));
+                $hashedPassword = password_hash($assignedPassword, PASSWORD_DEFAULT);
+
+                // DBに保存
+                $stmt = $pdo->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+                $stmt->execute([$username, $hashedPassword]);
+
                 $message = "ユーザー名「{$username}」を登録しました。<br>
                 あなたのパスワードは「<strong>{$assignedPassword}</strong>」です。<br>
                 <span style='color:red;'>※生成されたパスワードは必ず保存してください。再表示はできません。</span><br><br>
                 <a href='login.php'><button type='button'>ログイン画面へ</button></a>";
-            } else {
-                $message = "登録可能なパスワードが残っていません。";
             }
         }
+    } catch (PDOException $e) {
+        $message = "❌ DB接続エラー: " . htmlspecialchars($e->getMessage());
     }
 }
+
+
 ?>
 <!DOCTYPE html>
 <html lang="ja">

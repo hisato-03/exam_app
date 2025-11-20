@@ -1,3 +1,4 @@
 /vendor/
 .env
 *.log
+/db_data/

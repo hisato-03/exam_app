@@ -4,27 +4,35 @@ error_reporting(E_ALL);
 session_start();
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $username = $_POST["username"];
+    $username = trim($_POST["username"]);
     $password = $_POST["password"];
-    $found = false;
 
-    $filePath = __DIR__ . '/users.csv';
-    if (($file = fopen($filePath, "r")) !== false) {
-        while (($data = fgetcsv($file)) !== false) {
-            if ($data[0] === $username && $data[1] === $password) {
-                $_SESSION["user"] = $username;
-                $found = true;
-                break;
-            }
+    // DB接続情報を環境変数から取得
+    $host = getenv('DB_HOST') ?: 'db';
+    $db   = getenv('DB_NAME') ?: 'exam_app';
+    $user = getenv('DB_USER') ?: 'exam_user';
+    $pass = getenv('DB_PASS') ?: 'exam_pass';
+
+    try {
+        $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
+
+        // ユーザー検索
+        $stmt = $pdo->prepare("SELECT password FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($row && password_verify($password, $row['password'])) {
+            // ログイン成功
+            $_SESSION["user"] = $username;
+            header("Location: test.php");
+            exit;
+        } else {
+            $error = "ログイン失敗：ユーザー名またはパスワードが違います";
         }
-        fclose($file);
-    }
-
-    if ($found) {
-        header("Location: test.php"); // ログイン成功 → test.phpへ
-        exit;
-    } else {
-        $error = "ログイン失敗：ユーザー名またはパスワードが違います";
+    } catch (PDOException $e) {
+        $error = "❌ DB接続エラー: " . htmlspecialchars($e->getMessage());
     }
 }
 ?>
@@ -51,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       padding: 30px 40px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      width: 380px; /* ← 幅を広げた */
+      width: 380px;
       text-align: center;
     }
     .login-form h2 {
@@ -61,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     .login-form input[type="text"],
     .login-form input[type="password"] {
       width: 100%;
-      padding: 12px; /* 少し余裕を持たせる */
+      padding: 12px;
       margin-bottom: 16px;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -93,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     .register-link button {
       width: 100%;
       padding: 12px;
-      background-color: #4CAF50; /* 緑系で区別 */
+      background-color: #4CAF50;
       color: #fff;
       border: none;
       border-radius: 6px;
@@ -115,7 +123,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       <button type="submit">ログイン</button>
       <?php if (isset($error)) echo "<p class='error-message'>$error</p>"; ?>
 
-      <!-- 新規アカウント登録ボタンをカード下に配置 -->
       <div class="register-link">
         <p>まだアカウントをお持ちでない方はこちら:</p>
         <a href="account.php"><button type="button">新規アカウント登録</button></a>
