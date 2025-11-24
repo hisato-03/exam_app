@@ -40,7 +40,15 @@ if ($user === "guest") {
     echo "<h2>ようこそ、" . htmlspecialchars($user) . " さん！</h2>";
     echo "<p>ここから科目を選んで学習を始められます。</p>";
 }
+
+// ▼ 辞書機能の案内を追加
+echo "<p style='margin-top:20px;color:#333;font-size:0.95em;'>
+      わからない単語はマウスで選択すると「辞書で調べる」ボタンが表示されます。
+      </p>";
+
 echo '</div>';
+
+
 
 // ▼ ツールバー（科目切り替え＋ふりがな表示＋ユーザー情報＋リンク群）
 echo '<div class="toolbar">';
@@ -76,12 +84,15 @@ echo '</div>';
 
 // ▼ Google Sheets API 設定
 $subject = $_GET['subject'] ?? '人間の尊厳と自立';
-$client = new Client();
+$client = new Google\Client();
 $client->setApplicationName('ExamApp');
-$client->setScopes([Sheets::SPREADSHEETS_READONLY]);
-$client->setAuthConfig(__DIR__ . '/credentials.json');
+$client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
+
+// 環境変数からパスを取得
+$client->setAuthConfig(getenv('GOOGLE_APPLICATION_CREDENTIALS'));
+
 $client->setAccessType('offline');
-$service = new Sheets($client);
+$service = new Google\Service\Sheets($client);
 
 // ▼ 辞書取得
 try {
@@ -126,6 +137,7 @@ echo "<form class='qa-form' action='save_history.php' method='post'>";
 // 問題文
 echo "<div class='question-text content-ruby'><strong>問題:</strong> " . htmlspecialchars($questionText) . "</div>";
 
+
 // hiddenフィールド（必須データ）
 echo "<input type='hidden' name='question_id' value='" . htmlspecialchars($questionId) . "'>";
 echo "<input type='hidden' name='exam_number' value='" . htmlspecialchars($examNumber) . "'>";
@@ -135,12 +147,19 @@ echo "<input type='hidden' name='subject' value='" . htmlspecialchars($subject) 
 // 選択肢
 echo "<ul class='choices content-ruby'>";
 for ($i = 1; $i <= 5; $i++) {
-    $choiceText = htmlspecialchars($choices[$i-1] ?? '');
+    $choiceTextRaw = $choices[$i-1] ?? '';
+    $choiceText = htmlspecialchars($choiceTextRaw);
     if ($choiceText !== '') {
-        echo "<li><label><input type='radio' name='answer' value='{$i}' required> {$choiceText}</label></li>";
+        // 番号を削除した文章（表示用）
+        $cleanSentence = preg_replace('/^\d+\s*/', '', $choiceTextRaw);
+
+        echo "<li>";
+        echo "<label><input type='radio' name='answer' value='{$i}' required> {$cleanSentence}</label>";
+        echo "</li>";
     }
 }
 echo "</ul>";
+
 
 // ボタンコンテナ
 echo "<div class='btn-container'>";
@@ -159,5 +178,41 @@ echo "</form></div>";
 } catch (Exception $e) {
   echo '<p>Google API Error: ' . htmlspecialchars($e->getMessage()) . '</p>';
 }
+// ▼ ハイライト辞書検索用スクリプトを追加
+echo '<script>
+document.addEventListener("mouseup", function() {
+    const selectedText = window.getSelection().toString().trim();
+    if (selectedText.length > 0) {
+        const oldPopup = document.getElementById("dictPopup");
+        if (oldPopup) oldPopup.remove();
+
+        const popup = document.createElement("div");
+        popup.id = "dictPopup";
+        popup.style.position = "absolute";
+        popup.style.background = "#2196F3";
+        popup.style.color = "#fff";
+        popup.style.padding = "6px 10px";
+        popup.style.borderRadius = "4px";
+        popup.style.cursor = "pointer";
+        popup.style.zIndex = "9999";
+        popup.innerText = "辞書で調べる";
+
+        popup.onclick = function() {
+            window.open("dictionary.php?word=" + encodeURIComponent(selectedText), "_blank");
+        };
+
+        const rect = window.getSelection().getRangeAt(0).getBoundingClientRect();
+        popup.style.left = (rect.left + window.scrollX) + "px";
+        popup.style.top = (rect.top + window.scrollY - 30) + "px";
+
+        document.body.appendChild(popup);
+
+        setTimeout(() => {
+            if (popup) popup.remove();
+        }, 5000);
+    }
+});
+</script>';
+
 
 echo '</body></html>';

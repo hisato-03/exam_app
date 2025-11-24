@@ -2,7 +2,10 @@ $(function(){
   console.log(dictMap);
 
   function getSortedEntries(map) {
-    return Object.entries(map).sort((a, b) => b[0].length - a[0].length);
+    return Object.entries(map).map(([kanji, val]) => {
+      const furigana = typeof val === "string" ? val : val.furigana;
+      return [kanji, furigana];
+    }).sort((a, b) => b[0].length - a[0].length);
   }
 
   function applyRubyToTextNodes(rootEl, entries) {
@@ -31,11 +34,14 @@ $(function(){
         let found = null;
         let index = -1;
 
+        // ▼ 正規表現検索に変更
         for (const [kanji, furigana] of entries) {
-          const pos = remaining.indexOf(kanji);
-          if (pos !== -1 && (index === -1 || pos < index)) {
+          const escaped = kanji.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // 正規表現用にエスケープ
+          const regex = new RegExp(escaped);
+          const match = regex.exec(remaining);
+          if (match && (index === -1 || match.index < index)) {
             found = [kanji, furigana];
-            index = pos;
+            index = match.index;
           }
         }
 
@@ -92,6 +98,16 @@ $(function(){
   applyRuby(".explanation");
   applyRuby(".explanation *");
   applyRubyVisibility();
+
+  // ▼ 辞書ページ用：単語詳細や意味にルビ適用
+  applyRuby(".word-detail");
+  applyRuby(".word-detail *");
+  applyRuby(".word-meaning");
+  applyRuby(".word-meaning *");
+　applyRuby(".meaning-text");
+　applyRuby(".meaning-text *");
+
+
 
   // ▼ UI要素（no-ruby クラス付き）はふりがなを削除して固定表示
   $(".no-ruby ruby").each(function(){
