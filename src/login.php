@@ -18,14 +18,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
 
-        // ユーザー検索
-        $stmt = $pdo->prepare("SELECT password FROM users WHERE username = ?");
+        // ユーザー検索（idも取得）
+        $stmt = $pdo->prepare("SELECT id, username, password FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($row && password_verify($password, $row['password'])) {
-            // ログイン成功
-            $_SESSION["user"] = $username;
+            // ログイン成功：セッションに保存
+            $_SESSION["user_id"] = $row["id"];
+            $_SESSION["user"] = $row["username"];
             header("Location: test.php");
             exit;
         } else {

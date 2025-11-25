@@ -2,6 +2,9 @@
 session_start();
 require "auth.php";
 require __DIR__ . '/vendor/autoload.php';
+// ▼ ユーザー情報
+$userId = $_SESSION['user_id'] ?? 0;
+$userName = $_SESSION['user'] ?? "guest";
 
 use Google\Client;
 use Google\Service\Sheets;
@@ -72,8 +75,10 @@ echo "<script>const dictMap = {$dictMapJson};</script>";
 echo '<script src="script.js"></script>';
 echo '</head><body>';
 
-// ▼ 単語と意味を取得（完全一致）
+// ▼ 単語と科目と意味を取得（完全一致）
 $word = $_GET['word'] ?? '';
+$subject = $_GET['subject'] ?? '';  // ← ここを追加
+
 $meaning = '';
 foreach ($dictValues as $row) {
     $dictWord = $row[0] ?? '';
@@ -82,6 +87,7 @@ foreach ($dictValues as $row) {
         break;
     }
 }
+
 
 // ▼ 表示部分（単語は必ず表示）
 echo "<div class='word-detail'><strong>単語:</strong> " . htmlspecialchars($word) . "</div>";
@@ -102,7 +108,22 @@ $translations = [
 ];
 $translationsJson = json_encode($translations, JSON_UNESCAPED_UNICODE);
 
-// ▼ ドロップダウンと表示領域
+// ▼ 調べた単語を履歴に保存
+if (!empty($word) && !empty($meaning) && $userId > 0) {
+    $mysqli = new mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
+    if (!$mysqli->connect_error) {
+        $stmt = $mysqli->prepare("INSERT INTO searched_words (user_id, word, meaning, created_at) VALUES (?, ?, ?, NOW())");
+        $stmt->bind_param("iss", $userId, $word, $meaning);
+        if (!$stmt->execute()) {
+            echo "<p>❌ 履歴保存失敗: " . htmlspecialchars($stmt->error) . "</p>";
+        }
+        $stmt->close();
+    } else {
+        echo "<p>❌ DB接続失敗: " . htmlspecialchars($mysqli->connect_error) . "</p>";
+    }
+}
+
+//▼ 以下がBパート（HTML,JavaScript）ドロップダウンと表示領域
 echo <<<HTML
 <div>
   <label for="lang-select"><strong>翻訳言語:</strong></label>
@@ -131,21 +152,19 @@ $('#lang-select').on('change', function() {
 </script>
 HTML;
 
-// ▼ 調べた単語を履歴に保存
-if (!empty($word) && !empty($meaning) && isset($_SESSION['user_id'])) {
-    $mysqli = new mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
-    if (!$mysqli->connect_error) {
-        $stmt = $mysqli->prepare("INSERT INTO searched_words (user_id, word, meaning, created_at) VALUES (?, ?, ?, NOW())");
-        $stmt->bind_param("iss", $_SESSION['user_id'], $word, $meaning);
-        $stmt->execute();
-        $stmt->close();
-    }
+?>
+<!-- ▼ 履歴リンクと戻るリンク -->
+<div class="links">
+  <a href="dictionary_history.php">調べた単語履歴を見る</a> |
+  <a href="test.php?subject=<?php echo urlencode($subject); ?>" id="backLink">試験画面へ戻る</a>
+</div>
+
+<script>
+// test.phpからwindow.openで開かれた場合は「戻るリンク」を非表示にする
+if (window.opener) {
+  document.getElementById("backLink").style.display = "none";
 }
+</script>
 
-// ▼ 履歴リンクと戻るリンクを追加
-echo '<div class="links">';
-echo '<a href="dictionary_history.php">調べた単語履歴を見る</a> | ';
-echo '<a href="test.php">試験画面へ戻る</a>';
-echo '</div>';
-
-echo '</body></html>';
+</body>
+</html>
