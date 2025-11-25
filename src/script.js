@@ -1,3 +1,16 @@
+/**
+ * script.js
+ * 
+ * 役割：
+ * - Aパート：ふりがな処理（dictMapを使ってテキストにルビを付与）
+ * - Bパート：UI操作（ふりがな表示切替、解説開閉、スコア表示）
+ * 
+ * 注意：
+ * - 辞書ポップアップ（ハイライト検索）は test.php 側に移動済み
+ * - このファイルは学習UI専用として管理する
+ */
+
+
 $(function(){
   console.log(dictMap);
 
@@ -92,7 +105,8 @@ $(function(){
     }
   }
 
-  // ▼ 初期表示時：問題文・選択肢・解説文すべてにふりがな適用
+
+  // ▼ 以下がBパート（初期適用とUI操作）初期表示時：問題文・選択肢・解説文すべてにふりがな適用
   applyRuby(".question-card");
   applyRuby(".question-card *");
   applyRuby(".explanation");
@@ -104,9 +118,8 @@ $(function(){
   applyRuby(".word-detail *");
   applyRuby(".word-meaning");
   applyRuby(".word-meaning *");
-　applyRuby(".meaning-text");
-　applyRuby(".meaning-text *");
-
+  applyRuby(".meaning-text");
+  applyRuby(".meaning-text *");
 
 
   // ▼ UI要素（no-ruby クラス付き）はふりがなを削除して固定表示
@@ -157,3 +170,4 @@ $(function(){
     statsDiv.innerHTML = html;
   };
 });
+
