@@ -355,3 +355,14 @@ a:hover {
   cursor: not-allowed;
   /* pointer-events: none; ← コメントアウト */
 }
+
+.answer {
+  text-align: center; /* 判定結果全体を中央寄せ */
+}
+
+.judgement-correct,
+.judgement-wrong {
+  display: inline-block;
+  margin: 10px 0;
+  font-size: 2.5em; /* 大きく強調 */
+}

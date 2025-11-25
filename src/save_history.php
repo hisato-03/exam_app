@@ -1,47 +1,55 @@
 <?php
 session_start();
 
-// ログインユーザー
-$user = $_SESSION["user"] ?? "guest";
+$user = $_SESSION["user"] ?? "guest"; // ログインユーザー or guest
 
 // POSTで受け取るデータ
-$questionId   = $_POST["question_id"] ?? "";
-$examNumber   = $_POST["exam_number"] ?? "";
-$answerNumber = intval($_POST["answer"] ?? 0);
-$correctNumber= intval($_POST["correct"] ?? 0);
-$subject      = $_POST["subject"] ?? "";  
+$questionId  = $_POST["question_id"] ?? "";
+$examNumber  = $_POST["exam_number"] ?? "";
+$answer      = intval($_POST["answer"] ?? 0);
+$correct     = intval($_POST["correct"] ?? 0);
+$subject     = $_POST["subject"] ?? "";
 
-// 判定
-$isCorrect = ($answerNumber === $correctNumber) ? 1 : 0;
+// 判定フラグ
+$isCorrect = ($answer === $correct) ? 1 : 0;
 
-// DB接続
+// ▼ ゲストの場合は保存せずに判定だけ返す
+if ($user === "guest") {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        "is_correct" => $isCorrect,
+        "judgement"  => $isCorrect ? "○" : "×",
+        "message"    => "ゲスト利用のため履歴は保存されません。"
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// ▼ ログインユーザーのみDB保存
 try {
     $pdo = new PDO("mysql:host=db;dbname=exam_app;charset=utf8mb4", "exam_user", "exam_pass");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->exec("SET NAMES utf8mb4");
 
-    // INSERT
     $stmt = $pdo->prepare("
-        INSERT INTO history (user, subject, question_id, exam_number, answer, correct, is_correct)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO history (user, question_id, exam_number, answer, correct, is_correct, subject, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     ");
-    $stmt->execute([$user, $subject, $questionId, $examNumber, $answerNumber, $correctNumber, $isCorrect]);
-
-    // 判定結果を画面に返す
-    echo "<p>問題ID: {$questionId} / 試験番号: {$examNumber}</p>";
-    echo "<p>あなたの回答: {$answerNumber}</p>";
-    echo "<p>正解: {$correctNumber}</p>";
-    echo "<p>判定: " . ($isCorrect ? "○" : "×") . "</p>";
-    echo "<p>保存しました（" . date("Y-m-d H:i:s") . "）</p>";
-
-    // 戻るリンク
-    if ($subject) {
-        echo "<a href='test.php?subject=" . urlencode($subject) . "'>← 戻る</a>";
-    } else {
-        echo "<a href='test.php'>← 戻る</a>";
-    }
+    $stmt->execute([$user, $questionId, $examNumber, $answer, $correct, $isCorrect, $subject]);
 
 } catch (PDOException $e) {
-    echo "DBエラー: " . htmlspecialchars($e->getMessage());
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(["error" => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    exit;
 }
-?>
+
+// ▼ JSON返却（ログインユーザー用）
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode([
+    "question_id" => $questionId,
+    "exam_number" => $examNumber,
+    "answer"      => $answer,
+    "correct"     => $correct,
+    "is_correct"  => $isCorrect,
+    "judgement"   => $isCorrect ? "○" : "×",
+    "saved_at"    => date("Y-m-d H:i:s"),
+    "subject"     => $subject
+], JSON_UNESCAPED_UNICODE);
