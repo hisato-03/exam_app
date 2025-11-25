@@ -126,6 +126,7 @@ try {
   echo "<script>const dictMap = {$dictJson};</script>";
 } catch (Exception $e) {
   echo '<!-- 辞書取得失敗: ' . htmlspecialchars($e->getMessage()) . ' -->';
+  echo "<script>const dictMap = {};</script>"; // ← 空オブジェクトで定義
 }
 
 // ▼ 問題取得（キャッシュ対応）
@@ -260,21 +261,69 @@ for ($p = 1; $p <= $totalPages; $p++) {
 echo "</div>";
 }
 
-//以上がBパート画面表示（HTML+問題出力）
+// PHPの処理ここまで
+?>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).on("submit", ".qa-form", function(e) {
+  e.preventDefault();
 
+  const $form = $(this);
+
+  $.ajax({
+    url: $form.attr("action"),
+    type: $form.attr("method"),
+    data: $form.serialize(),
+    dataType: "json",
+    success: function(response) {
+      if (response.message) {
+        // ▼ ゲストの場合（保存なし）
+        $form.find(".answer").html(
+          `<p>
+            判定: <span style="color:${response.judgement === '○' ? 'green' : 'red'};">
+              ${response.judgement}
+            </span><br>
+            ${response.message}
+          </p>`
+        );
+      } else {
+        // ▼ ログインユーザーの場合（保存あり）
+        $form.find(".answer").html(
+          `<p>
+            問題ID: ${response.question_id}<br>
+            試験番号: ${response.exam_number}<br>
+            あなたの回答: ${response.answer}<br>
+            正解: ${response.correct}<br>
+            判定: <span style="color:${response.judgement === '○' ? 'green' : 'red'};">
+              ${response.judgement}
+            </span><br>
+            保存しました (${response.saved_at})
+          </p>`
+        );
+      }
+    },
+    error: function() {
+      $form.find(".answer").html("<p style='color:red;'>保存に失敗しました。</p>");
+    }
+  });
+});
+</script>
+
+
+
+<?php
+//以上がBパート画面表示（HTML+問題出力）
 // ▼ 科目をJSに渡す
-echo "<script>window.currentSubject = " . json_encode($subject, JSON_UNESCAPED_UNICODE) . ";</script>";
+echo "<script>window.currentSubject = '" . htmlspecialchars($subject, ENT_QUOTES) . "';</script>";
 
 // ▼ 辞書ポップアップスクリプト
 echo <<<EOT
 <script>
 document.addEventListener("mouseup", function(e) {
   if (e.target.id === "dictPopup") return;
-
   const selectedText = window.getSelection().toString().trim();
   const oldPopup = document.getElementById("dictPopup");
   if (oldPopup) oldPopup.remove();
-
   if (selectedText.length > 0) {
     const popup = document.createElement("div");
     popup.id = "dictPopup";
@@ -289,21 +338,16 @@ document.addEventListener("mouseup", function(e) {
     popup.style.cursor = "pointer";
     popup.style.zIndex = "9999999";
     popup.style.pointerEvents = "auto";
-
     popup.addEventListener("click", function(ev) {
       ev.stopPropagation();
       const subject = window.currentSubject || "";
-      const url = "dictionary.php?word=" + encodeURIComponent(selectedText) +
-                  "&subject=" + encodeURIComponent(subject);
+      const url = "dictionary.php?word=" + encodeURIComponent(selectedText) + "&subject=" + encodeURIComponent(subject);
       window.location.href = url;
       popup.remove();
     });
-
     document.body.appendChild(popup);
   }
 });
 </script>
 EOT;
-echo '</body></html>';
-
-//以上がCパート：インタラクション（JavaScript）
+?>
