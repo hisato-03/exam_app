@@ -289,15 +289,11 @@ $(document).on("submit", ".qa-form", function(e) {
       } else {
         // ▼ ログインユーザーの場合（保存あり）
         $form.find(".answer").html(
-          `<p>
-            問題ID: ${response.question_id}<br>
-            試験番号: ${response.exam_number}<br>
-            あなたの回答: ${response.answer}<br>
+          `<p>      
             正解: ${response.correct}<br>
             判定: <span style="color:${response.judgement === '○' ? 'green' : 'red'};">
               ${response.judgement}
             </span><br>
-            保存しました (${response.saved_at})
           </p>`
         );
       }

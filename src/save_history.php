@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 
 $user = $_SESSION["user"] ?? "guest"; // ログインユーザー or guest
@@ -44,6 +45,7 @@ try {
 // ▼ JSON返却（ログインユーザー用）
 header('Content-Type: application/json; charset=utf-8');
 echo json_encode([
+    "post_data"   => $_POST,   // ← デバッグ用に追加
     "question_id" => $questionId,
     "exam_number" => $examNumber,
     "answer"      => $answer,
