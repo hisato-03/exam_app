@@ -20,6 +20,19 @@ $dictJson = '{}';
 require 'vendor/autoload.php';
 use Google\Client;
 use Google\Service\Sheets;
+// ▼ Google Driveの共有URLを埋め込み形式に変換する関数（画像表示用）
+function convertDriveUrl($url) {
+    if (preg_match('/\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+        $id = $matches[1];
+        return "https://drive.usercontent.google.com/download?id={$id}&export=view";
+    }
+    if (preg_match('/open\?id=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+        $id = $matches[1];
+        return "https://drive.usercontent.google.com/download?id={$id}&export=view";
+    }
+    return $url;
+}
+
 
 echo '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>トップページ</title>';
 echo '<link rel="stylesheet" href="style.css">';
@@ -97,14 +110,14 @@ if ($user !== "guest") {
 echo '  </div>';
 echo '</div>';
 
-// ▼ Google Sheets API 設定
+// Google Sheets API 設定
 $subject = $_GET['subject'] ?? '人間の尊厳と自立';
 $client = new Google\Client();
 $client->setApplicationName('ExamApp');
 $client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
 
-// 環境変数からパスを取得
-$client->setAuthConfig(getenv('GOOGLE_APPLICATION_CREDENTIALS'));
+// credentials.json の正しいパスを指定
+$client->setAuthConfig(__DIR__ . '/src/credentials.json');
 
 $client->setAccessType('offline');
 $service = new Google\Service\Sheets($client);
@@ -139,7 +152,7 @@ if (isset($_SESSION[$cacheKey]) && $_SESSION[$cacheKey]['expires'] > time()) {
     try {
         $response = $service->spreadsheets_values->get(
             '1wBLqdju-BmXS--aPCMMC3PipvCpBFXmdVemT0X2rKew',
-            "{$subject}!A2:J"
+            "{$subject}!A2:L"
         );
         $values = $response->getValues();
 
@@ -165,31 +178,44 @@ $end = min($start + $perPage, $total);
 if (empty($values)) {
     echo "<p>データが見つかりませんでした。</p>";
 } else {
+    // ページ情報と進捗バーはループ外で表示するほうが安全（必要ならこの位置に）
+    $totalPages = ceil($total / $perPage);
+    $progress = ($end / max(1, $total)) * 100;
+
+    echo "<div class='page-info' style='text-align:center;margin:15px 0;'>";
+    echo "ページ {$page} / {$totalPages} （全 {$total} 問）";
+    echo "</div>";
+
+    echo "<div class='progress-bar' style='width:80%;margin:10px auto;background:#eee;border-radius:6px;overflow:hidden;'>";
+    echo "<div style='width:{$progress}%;background:#4CAF50;height:12px;'></div>";
+    echo "</div>";
+
     for ($index = $start; $index < $end; $index++) {
-        $row = $values[$index];
+        // L列まで安全にパディング
+        $row = array_pad($values[$index], 12, '');
         $questionId   = $row[0] ?? '';
         $questionText = $row[1] ?? '';
         $choices      = array_slice($row, 2, 5);
         $correctIndex = intval($row[7] ?? 0);
         $explanation  = $row[8] ?? '';
         $examNumber   = $row[9] ?? '';
+        $imageUrl     = $row[11] ?? ''; // L列
+        $embedUrl     = convertDriveUrl($imageUrl);
+        if (!empty($embedUrl)) {
+        echo "<img src='" . htmlspecialchars($embedUrl) . "' alt='' class='question-image'>";
+
+}
 
         echo "<div class='question-card'>";
         echo "<form class='qa-form' action='save_history.php' method='post'>";
-// ▼ ページ情報表示
-$totalPages = ceil($total / $perPage);
-echo "<div class='page-info' style='text-align:center;margin:15px 0;'>";
-echo "ページ {$page} / {$totalPages} （全 {$total} 問）";
-echo "</div>";
-
-// ▼ 進捗バー
-$progress = ($end / $total) * 100;
-echo "<div class='progress-bar' style='width:80%;margin:10px auto;background:#eee;border-radius:6px;overflow:hidden;'>";
-echo "<div style='width:{$progress}%;background:#4CAF50;height:12px;'></div>";
-echo "</div>";
-
+ 
         // 問題文
         echo "<div class='question-text content-ruby'><strong>問題:</strong> " . htmlspecialchars($questionText) . "</div>";
+        
+        // 画像（あれば表示）
+        if (!empty($embedUrl)) {
+            echo "<img src='" . htmlspecialchars($embedUrl) . "' alt='問題画像' class='question-image'>";
+        }
 
         // hiddenフィールド
         echo "<input type='hidden' name='question_id' value='" . htmlspecialchars($questionId) . "'>";
@@ -222,7 +248,7 @@ echo "</div>";
 
         echo "</form></div>";
     }
-
+  
     // ▼ ページネーション（subject保持）
 echo "<div class='btn-container' style='margin:20px 0;text-align:center;'>";
 
