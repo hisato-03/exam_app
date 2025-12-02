@@ -110,18 +110,25 @@ $translationsJson = json_encode($translations, JSON_UNESCAPED_UNICODE);
 
 // ▼ 調べた単語を履歴に保存
 if (!empty($word) && !empty($meaning) && $userId > 0) {
-    $mysqli = new mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
-    if (!$mysqli->connect_error) {
-        $stmt = $mysqli->prepare("INSERT INTO searched_words (user_id, word, meaning, created_at) VALUES (?, ?, ?, NOW())");
-        $stmt->bind_param("iss", $userId, $word, $meaning);
-        if (!$stmt->execute()) {
-            echo "<p>❌ 履歴保存失敗: " . htmlspecialchars($stmt->error) . "</p>";
-        }
-        $stmt->close();
-    } else {
-        echo "<p>❌ DB接続失敗: " . htmlspecialchars($mysqli->connect_error) . "</p>";
+    try {
+        $pdo = new PDO(
+            "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_NAME']};charset=utf8mb4",
+            $_ENV['DB_USER'],
+            $_ENV['DB_PASS'],
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
+
+        $stmt = $pdo->prepare("
+            INSERT INTO searched_words (user_id, word, meaning, subject, created_at)
+            VALUES (?, ?, ?, ?, NOW())
+        ");
+        $stmt->execute([$userId, $word, $meaning, $subject]);
+
+    } catch (PDOException $e) {
+        echo "<p>❌ 履歴保存失敗: " . htmlspecialchars($e->getMessage()) . "</p>";
     }
 }
+
 
 //▼ 以下がBパート（HTML,JavaScript）ドロップダウンと表示領域
 echo <<<HTML
