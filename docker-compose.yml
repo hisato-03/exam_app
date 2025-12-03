@@ -1,18 +1,18 @@
-
 services:
   php:
-    build: ./php
-    container_name: exam_app_php
+    build: ./exam_app/php   # PHPのビルド設定はexam_app側を利用
+    container_name: app_php
     volumes:
-      - ./src:/var/www/html
-      - ./vendor:/var/www/html/vendor  
+      - ./exam_app/src:/var/www/html/exam_app
+      - ./video_app:/var/www/html/video_app
     ports:
-      - "8080:80"
+      - "8082:80"   # exam_app用ポート
+      
     environment:
       DB_HOST: db
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
+      DB_NAME: exam_app
+      DB_USER: exam_user
+      DB_PASS: exam_pass
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
     depends_on:
       - db
@@ -21,26 +21,27 @@ services:
     image: mysql:8.0
     container_name: exam_app_db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASS}
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: exam_app
+      MYSQL_USER: exam_user
+      MYSQL_PASSWORD: exam_pass
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - kawab_exam_db_data:/var/lib/mysql
+      - ./exam_app/src/exam_app/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     restart: always
     ports:
-      - "8081:80"
+      - "8083:80"
     environment:
       PMA_HOST: db
       PMA_USER: root
       PMA_PASSWORD: rootpass
     depends_on:
       - db
-      
+
 volumes:
-  db_data:
+  kawab_exam_db_data:
