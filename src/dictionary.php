@@ -38,7 +38,7 @@ function translateText($text, $targetLang = 'en') {
 $client = new Google\Client();
 $client->setApplicationName('ExamApp');
 $client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
-$client->setAuthConfig($_ENV['GOOGLE_APPLICATION_CREDENTIALS'] ?? null);
+$client->setAuthConfig(__DIR__ . '/credentials.json');
 $client->setAccessType('offline');
 $service = new Google\Service\Sheets($client);
 
