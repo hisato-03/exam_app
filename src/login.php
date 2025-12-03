@@ -19,19 +19,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         ]);
 
         // ユーザー検索（idも取得）
-        $stmt = $pdo->prepare("SELECT id, username, password FROM users WHERE username = ?");
+        $stmt = $pdo->prepare("SELECT id, username, password_hash FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($row && password_verify($password, $row['password'])) {
-            // ログイン成功：セッションに保存
-            $_SESSION["user_id"] = $row["id"];
-            $_SESSION["user"] = $row["username"];
-            header("Location: test.php");
-            exit;
-        } else {
-            $error = "ログイン失敗：ユーザー名またはパスワードが違います";
-        }
+    if ($row && password_verify($password, $row['password_hash'])) {
+        // ログイン成功：セッションに保存
+        $_SESSION["user_id"] = $row["id"];
+        $_SESSION["user"] = $row["username"];
+        header("Location: test.php");
+    exit;
+} else {
+    $error = "ログイン失敗：ユーザー名またはパスワードが違います";
+}
+
     } catch (PDOException $e) {
         $error = "❌ DB接続エラー: " . htmlspecialchars($e->getMessage());
     }

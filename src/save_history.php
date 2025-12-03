@@ -2,7 +2,7 @@
 
 session_start();
 
-$user = $_SESSION["user"] ?? "guest"; // ログインユーザー or guest
+$userId = $_SESSION["user_id"] ?? 0; // ログインユーザーID or 0（ゲスト）
 
 // POSTで受け取るデータ
 $questionId  = $_POST["question_id"] ?? "";
@@ -15,7 +15,7 @@ $subject     = $_POST["subject"] ?? "";
 $isCorrect = ($answer === $correct) ? 1 : 0;
 
 // ▼ ゲストの場合は保存せずに判定だけ返す
-if ($user === "guest") {
+if ($userId === 0) {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         "is_correct" => $isCorrect,
@@ -31,10 +31,10 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     $stmt = $pdo->prepare("
-        INSERT INTO history (user, question_id, exam_number, answer, correct, is_correct, subject, created_at)
+        INSERT INTO history (user_id, question_id, exam_number, answer, correct, is_correct, subject, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     ");
-    $stmt->execute([$user, $questionId, $examNumber, $answer, $correct, $isCorrect, $subject]);
+    $stmt->execute([$userId, $questionId, $examNumber, $answer, $correct, $isCorrect, $subject]);
 
 } catch (PDOException $e) {
     header('Content-Type: application/json; charset=utf-8');
@@ -45,7 +45,7 @@ try {
 // ▼ JSON返却（ログインユーザー用）
 header('Content-Type: application/json; charset=utf-8');
 echo json_encode([
-    "post_data"   => $_POST,   // ← デバッグ用に追加
+    "post_data"   => $_POST,
     "question_id" => $questionId,
     "exam_number" => $examNumber,
     "answer"      => $answer,

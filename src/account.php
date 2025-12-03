@@ -33,8 +33,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $hashedPassword = password_hash($assignedPassword, PASSWORD_DEFAULT);
 
                 // DBに保存
-                $stmt = $pdo->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
                 $stmt->execute([$username, $hashedPassword]);
+
 
                 $message = "ユーザー名「{$username}」を登録しました。<br>
                 あなたのパスワードは「<strong>{$assignedPassword}</strong>」です。<br>

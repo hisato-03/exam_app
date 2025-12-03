@@ -16,9 +16,18 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // ▼ 履歴取得（ユーザーごと）
-    $stmt = $pdo->prepare("SELECT * FROM searched_words WHERE user_id=? ORDER BY created_at DESC");
-    $stmt->execute([$userId]);
-    $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $pdo->prepare("
+    SELECT s.*, u.username
+    FROM searched_words s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.user_id=?
+    ORDER BY s.created_at DESC
+");
+$stmt->execute([$userId]);
+$records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$userName = $records[0]['username'] ?? $userName;
+
 
 } catch (PDOException $e) {
     die("DBエラー: " . htmlspecialchars($e->getMessage()));
