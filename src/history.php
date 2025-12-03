@@ -10,31 +10,39 @@ try {
     $pdo = new PDO("mysql:host=db;dbname=exam_app;charset=utf8mb4", "exam_user", "exam_pass");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // ▼ 履歴取得（ユーザーごと）
-    $query = "SELECT * FROM history WHERE user=?";
-    $params = [$user];
+    // ▼ フィルター（GETパラメータ）
+$subject = $_GET['subject'] ?? '';
+$userId  = $_SESSION["user_id"] ?? 0;
 
-    if ($subject) {
-        $query .= " AND subject=?";
-        $params[] = $subject;
-    }
-    $query .= " ORDER BY created_at DESC";
+// ▼ 履歴取得（ユーザーごと）
+$query = "
+    SELECT h.*, u.username
+    FROM history h
+    JOIN users u ON h.user_id = u.id
+    WHERE h.user_id=?
+";
+$params = [$userId];
 
-    $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
-    $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+if ($subject) {
+    $query .= " AND h.subject=?";
+    $params[] = $subject;
+}
+$query .= " ORDER BY h.created_at DESC";
 
-    $totalCount = count($records);
+$stmt = $pdo->prepare($query);
+$stmt->execute($params);
+$records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // ▼ 科目別集計（試験のみ対象）
-    $stmt = $pdo->prepare("
-        SELECT subject, SUM(is_correct) AS correct, COUNT(*) AS total
-        FROM history
-        WHERE user=?
-        GROUP BY subject
-    ");
-    $stmt->execute([$user]);
-    $subjectStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// ▼ 科目別集計
+$stmt = $pdo->prepare("
+    SELECT h.subject, SUM(h.is_correct) AS correct, COUNT(*) AS total
+    FROM history h
+    WHERE h.user_id=?
+    GROUP BY h.subject
+");
+$stmt->execute([$userId]);
+$subjectStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 
 } catch (PDOException $e) {
     die("DBエラー: " . htmlspecialchars($e->getMessage()));
