@@ -2,6 +2,7 @@
 session_start();
 require "auth.php";
 require __DIR__ . '/vendor/autoload.php';
+
 // ▼ ユーザー情報
 $userId = $_SESSION['user_id'] ?? 0;
 $userName = $_SESSION['user'] ?? "guest";
@@ -13,7 +14,7 @@ use Google\Service\Sheets;
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-// ▼ 翻訳関数（必ず定義しておく）
+// ▼ 翻訳関数
 function translateText($text, $targetLang = 'en') {
     $apiKey = $_ENV['GOOGLE_TRANSLATE_API_KEY'] ?? null;
     if (!$apiKey) {
@@ -42,7 +43,7 @@ $client->setAuthConfig(__DIR__ . '/credentials.json');
 $client->setAccessType('offline');
 $service = new Google\Service\Sheets($client);
 
-// ▼ 辞書データ取得（ここで $dictValues を定義）
+// ▼ 辞書データ取得
 try {
   $dictResponse = $service->spreadsheets_values->get(
     '1LDr4Acf_4SE-Wzp-ypPxM6COZdOt2QYumak8hIVVdxo',
@@ -68,16 +69,13 @@ $dictMapJson = json_encode($dictMap, JSON_UNESCAPED_UNICODE);
 echo '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>辞書ページ</title>';
 echo '<link rel="stylesheet" href="style.css">';
 echo '<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>';
-
-// ▼ dictMap を JS に渡す（script.js より前に）
 echo "<script>const dictMap = {$dictMapJson};</script>";
-
 echo '<script src="script.js"></script>';
 echo '</head><body>';
 
-// ▼ 単語と科目と意味を取得（完全一致）
+// ▼ 単語と科目と意味を取得
 $word = $_GET['word'] ?? '';
-$subject = $_GET['subject'] ?? '';  // ← ここを追加
+$subject = $_GET['subject'] ?? '';
 
 $meaning = '';
 foreach ($dictValues as $row) {
@@ -88,18 +86,7 @@ foreach ($dictValues as $row) {
     }
 }
 
-
-// ▼ 表示部分（単語は必ず表示）
-echo "<div class='word-detail'><strong>単語:</strong> " . htmlspecialchars($word) . "</div>";
-
-if (!empty($meaning)) {
-    // 意味文は content-ruby クラス付きで1回だけ表示（ルビは JSに任せる）
-    echo "<div class='word-meaning content-ruby'><strong>意味:</strong> <span class='meaning-text'>" . htmlspecialchars($meaning) . "</span></div>";
-} else {
-    echo "<div class='word-meaning'><strong>意味:</strong> 辞書に登録されていません</div>";
-}
-
-// ▼ 翻訳APIで多言語に変換（単語を翻訳対象にする）
+// ▼ 翻訳APIで多言語に変換
 $translations = [
     'en' => translateText($word, 'en'),
     'tl' => translateText($word, 'tl'),
@@ -108,7 +95,7 @@ $translations = [
 ];
 $translationsJson = json_encode($translations, JSON_UNESCAPED_UNICODE);
 
-// ▼ 調べた単語を履歴に保存
+// ▼ 履歴保存
 if (!empty($word) && !empty($meaning) && $userId > 0) {
     try {
         $pdo = new PDO(
@@ -117,33 +104,63 @@ if (!empty($word) && !empty($meaning) && $userId > 0) {
             $_ENV['DB_PASS'],
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
         );
-
         $stmt = $pdo->prepare("
             INSERT INTO searched_words (user_id, word, meaning, subject, created_at)
             VALUES (?, ?, ?, ?, NOW())
         ");
         $stmt->execute([$userId, $word, $meaning, $subject]);
-
     } catch (PDOException $e) {
         echo "<p>❌ 履歴保存失敗: " . htmlspecialchars($e->getMessage()) . "</p>";
     }
 }
 
-
-//▼ 以下がBパート（HTML,JavaScript）ドロップダウンと表示領域
+// ▼ 表示部分（カード風に復活）
 echo <<<HTML
-<div>
-  <label for="lang-select"><strong>翻訳言語:</strong></label>
-  <select id="lang-select">
-    <option value="en">English</option>
-    <option value="tl">Tagalog</option>
-    <option value="my">Myanmar</option>
-    <option value="th">Thai</option>
-  </select>
+<!-- ▼ ふりがな表示切替ボタン -->
+  <div class="toggle-ruby">
+    <button id="toggleRubyBtn" class="btn-secondary">ふりがな非表示</button>
+  </div>
 </div>
-<div id="translation-result"><strong>English:</strong> {$translations['en']}</div>
+<div class="dictionary-container">
+  <h1>辞書検索</h1>
+ 
+  <div class="result-card">
+    <div class="word-detail"><strong>単語:</strong> {$word}</div>
+HTML;
 
+if (!empty($meaning)) {
+    echo "<div class='word-meaning content-ruby'><strong>意味:</strong> <span class='meaning-text'>" . htmlspecialchars($meaning) . "</span></div>";
+} else {
+    echo "<div class='word-meaning'><strong>意味:</strong> 辞書に登録されていません</div>";
+}
+
+echo <<<HTML
+  </div>
+  <div class="search-bar">
+    <label for="lang-select"><strong>翻訳言語:</strong></label>
+    <select id="lang-select">
+      <option value="en">English</option>
+      <option value="tl">Tagalog</option>
+      <option value="my">Myanmar</option>
+      <option value="th">Thai</option>
+    </select>
+  </div>
+
+  <div id="translation-result" class="result-card">
+    <div class="word"><strong>English:</strong></div>
+    <div class="meaning">{$translations['en']}</div>
+  </div>
+
+  <div class="links">
+    <a href="dictionary_history.php" class="btn-history">調べた単語履歴を見る</a>
+    <a href="test.php?subject={$subject}" id="backLink" class="btn-secondary">試験画面へ戻る</a>
+  </div>
+
+  
 <script>
+if (window.opener) {
+  document.getElementById("backLink").style.display = "none";
+}
 const translations = {$translationsJson};
 $('#lang-select').on('change', function() {
   const lang = $(this).val();
@@ -154,24 +171,13 @@ $('#lang-select').on('change', function() {
     case 'my': label = 'Myanmar'; break;
     case 'th': label = 'Thai'; break;
   }
-  $('#translation-result').html('<strong>' + label + ':</strong> ' + translations[lang]);
+  $('#translation-result').html(
+    '<div class="word"><strong>' + label + ':</strong></div>' +
+    '<div class="meaning">' + translations[lang] + '</div>'
+  );
 });
-</script>
-HTML;
-
-?>
-<!-- ▼ 履歴リンクと戻るリンク -->
-<div class="links">
-  <a href="dictionary_history.php">調べた単語履歴を見る</a> |
-  <a href="test.php?subject=<?php echo urlencode($subject); ?>" id="backLink">試験画面へ戻る</a>
-</div>
-
-<script>
-// test.phpからwindow.openで開かれた場合は「戻るリンク」を非表示にする
-if (window.opener) {
-  document.getElementById("backLink").style.display = "none";
-}
 </script>
 
 </body>
 </html>
+HTML;

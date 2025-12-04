@@ -72,7 +72,7 @@ $userName = $records[0]['username'] ?? $userName;
       $lastSubject = $records[0]["subject"] ?? "人間の尊厳と自立";
     ?>
     <div style="margin-top:20px; text-align:center;">
-      <a href="dictionary.php" class="btn-link" style="margin-right:20px;">← 辞書ページへ戻る</a>
+      <a href="history.php" class="btn-link" style="margin-right:20px;">← 学習履歴へ戻る</a>
       <a href="test.php?subject=<?= urlencode($lastSubject) ?>" class="btn-link">試験画面へ戻る →</a>
     </div>
   </div>

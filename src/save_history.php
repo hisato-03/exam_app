@@ -18,12 +18,15 @@ $isCorrect = ($answer === $correct) ? 1 : 0;
 if ($userId === 0) {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
-        "is_correct" => $isCorrect,
-        "judgement"  => $isCorrect ? "○" : "×",
-        "message"    => "ゲスト利用のため履歴は保存されません。"
+        "answer"    => $answer,
+        "correct"   => $correct,
+        "is_correct"=> $isCorrect,
+        "judgement" => $isCorrect ? "○" : "×",
+        "message"   => "ゲスト利用のため履歴は保存されません。"
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
 
 // ▼ ログインユーザーのみDB保存
 try {

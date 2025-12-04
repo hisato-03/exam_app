@@ -13,9 +13,9 @@
  * - script.js 側には辞書関連コードは残さない
  */
 
-
 require "auth.php";
-
+// ▼ 科目パラメータを受け取る
+$subject = $_GET['subject'] ?? '';
 $dictJson = '{}';
 require 'vendor/autoload.php';
 use Google\Client;
@@ -78,9 +78,10 @@ $subjects = [
   "コミュニケーション技術", "生活支援技術", "介護過程", "総合問題"
 ];
 foreach ($subjects as $s) {
-  $selected = ($_GET["subject"] ?? "") === $s ? "selected" : "";
-  echo "<option value='{$s}' {$selected}>{$s}</option>";
+    $selected = ($subject === $s) ? "selected" : "";
+    echo "<option value='".htmlspecialchars($s)."' {$selected}>".htmlspecialchars($s)."</option>";
 }
+
 echo '    </select>';
 echo '    <button type="submit" class="btn btn-subject no-ruby">科目切り替え</button>';
 echo '    <button type="button" id="toggleRubyBtn" class="btn btn-ruby no-ruby">ふりがな表示</button>';
@@ -101,7 +102,10 @@ echo '  </div>';
 echo '</div>';
 
 // Google Sheets API 設定
-$subject = $_GET['subject'] ?? '人間の尊厳と自立';
+if (empty($subject)) {
+    $subject = '人間の尊厳と自立'; // デフォルト科目
+}
+
 $client = new Google\Client();
 $client->setApplicationName('ExamApp');
 $client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
