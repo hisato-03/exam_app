@@ -419,3 +419,93 @@ a:hover {
 .btn-secondary:hover {
     background-color: #5a6268;
 }
+
+/* ▼ 辞書検索ページの中央寄せと見た目改善 */
+.dictionary-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.dictionary-container h1 {
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+}
+
+.search-bar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.search-bar label {
+  font-weight: bold;
+}
+
+.search-bar select {
+  padding: 8px 12px;
+  font-size: 1em;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.result-card {
+  margin-top: 20px;
+  padding: 20px;
+  background: #fafafa;
+  border-left: 4px solid #2196F3;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.result-card .word {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.result-card .meaning {
+  font-size: 1.1em;
+  color: #555;
+  text-align: center;
+}
+
+.links {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.links a {
+  margin: 0 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.result-card {
+  text-align: center;
+}
+.result-card .word,
+.result-card .meaning {
+  text-align: center;
+}
+
+.toggle-ruby {
+  text-align: center;   /* 中央寄せ */
+  margin-top: 1em;      /* 上に少し余白 */
+}
+
+.toggle-ruby button {
+  padding: 0.5em 1.2em; /* ボタンの見た目を少し整える */
+  font-size: 1em;
+}
+
