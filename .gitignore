@@ -1,5 +1,18 @@
 /vendor/
+src/vendor/
 .env
 *.log
 /db_data/
 credentials.json
+node_modules/
+
+# 動画ファイルを除外
+video_app/videos/
+
+# ローカル設定ファイル
+*.DS_Store
+.vscode/
+
+# OSごとの不要ファイル
+Thumbs.db
+ehthumbs.db

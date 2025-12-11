@@ -4,7 +4,6 @@ services:
     container_name: app_php
     volumes:
       - .:/var/www/html/exam_app
-      - ./video_app:/var/www/html/exam_app/video_app
     ports:
       - "8082:80"   # exam_app用ポート
     environment:

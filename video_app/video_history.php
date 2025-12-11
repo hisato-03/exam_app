@@ -17,7 +17,7 @@ try {
 }
 
 // ▼ Google Sheets から単元・科目名情報を取得
-require 'vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Google\Client;
 use Google\Service\Sheets;

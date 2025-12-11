@@ -3,7 +3,7 @@
 require_once('../auth.php');
 
 // Google Sheets API 読み込み
-require 'vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Google\Client;
 use Google\Service\Sheets;
