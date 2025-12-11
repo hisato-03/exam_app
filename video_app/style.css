@@ -1,0 +1,195 @@
+/* 全体のベーススタイル */
+body {
+  font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+  background-color: #f5f8fc;
+  margin: 0;
+  padding: 0;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* タイトル */
+h1 {
+  text-align: center;
+  color: #124a86;
+  margin: 40px 0 20px;
+  font-size: 30px;
+}
+
+/* ナビゲーションリンク */
+.nav-links {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.nav-links a {
+  margin: 0 12px;
+  text-decoration: none;
+  color: #0066cc;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.nav-links a:hover {
+  text-decoration: underline;
+}
+
+/* セクションブロック */
+.subject-block {
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  margin: 30px auto;
+  padding: 20px 24px;
+  width: 92%;
+  max-width: 860px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.subject-block h2 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #124a86;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 6px;
+}
+
+/* 動画リスト */
+ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 16px 0 0;
+}
+
+li {
+  margin: 10px 0;
+}
+
+a {
+  text-decoration: none;
+  color: #0066cc;
+  font-weight: 500;
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+a:hover {
+  background-color: #eaf3ff;
+  text-decoration: underline;
+}
+
+/* 単元ラベル */
+.unit-label {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* 節ラベル（非表示でもスタイルは残しておく） */
+.section-label {
+  color: #555;
+  font-size: 0.9em;
+  margin-left: 8px;
+}
+
+/* 履歴なしメッセージ */
+.no-history {
+  text-align: center;
+  color: #7a7a7a;
+  margin-top: 30px;
+  font-size: 16px;
+}
+
+/* 戻るリンク */
+.back-link {
+  display: block;
+  text-align: center;
+  margin: 30px auto;
+  font-weight: bold;
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* ボタン風リンク（オプション） */
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  margin: 10px 5px;
+  font-size: 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #fff;
+  background-color: #007bff;
+  transition: background-color 0.2s ease;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}
+
+/* 科目ごとの背景色バリエーション */
+.subject-block.bg-1 {
+  background-color: #fff9e6;
+}
+
+.subject-block.bg-2 {
+  background-color: #e6f7ff;
+}
+
+.subject-block.bg-3 {
+  background-color: #f0f5ff;
+}
+
+.subject-block.bg-4 {
+  background-color: #f9f0ff;
+}
+
+.subject-block.bg-5 {
+  background-color: #e8fce8;
+}
+
+.history-title {
+  text-align: center;
+  font-size: 24px;
+  color: #124a86;
+  margin-top: 30px;
+}
+
+.history-table-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* テーブル全体を中央に配置 */
+.history-block {
+  margin: 30px auto;
+  padding: 20px 24px;
+  width: fit-content;
+  max-width: 90%;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  text-align: center; /* テーブル内のテキストも中央に */
+}
+
+/* テーブルのセルを中央揃え */
+.history-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.history-table th,
+.history-table td {
+  text-align: center;
+  padding: 12px 10px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 15px;
+}

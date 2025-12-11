@@ -1,13 +1,12 @@
 services:
   php:
-    build: ./exam_app/php   # PHPのビルド設定はexam_app側を利用
+    build: .   # Dockerfileがdocker-compose.ymlと同じフォルダにあるのでここを指定
     container_name: app_php
     volumes:
-      - ./exam_app/src:/var/www/html/exam_app
-      - ./video_app:/var/www/html/video_app
+      - .:/var/www/html/exam_app
+      - ./video_app:/var/www/html/exam_app/video_app
     ports:
       - "8082:80"   # exam_app用ポート
-      
     environment:
       DB_HOST: db
       DB_NAME: exam_app
