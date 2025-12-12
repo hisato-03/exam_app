@@ -106,20 +106,21 @@ $(function(){
   }
 
 
-  // ▼ 以下がBパート（初期適用とUI操作）初期表示時：問題文・選択肢・解説文すべてにふりがな適用
-  applyRuby(".question-card");
-  applyRuby(".question-card *");
-  applyRuby(".explanation");
-  applyRuby(".explanation *");
-  applyRubyVisibility();
+  // ▼ 以下がBパート（初期適用とUI操作）初期表示時：問題文・選択肢・解説文・単語詳細・意味すべてにルビ適用
+  applyRuby([
+  ".question-card",
+  ".question-card *",
+  ".explanation",
+  ".explanation *",
+  ".word-detail",
+  ".word-detail *",
+  ".word-meaning",
+  ".word-meaning *",
+  ".meaning-text",
+  ".meaning-text *"
+].join(", "));
 
-  // ▼ 辞書ページ用：単語詳細や意味にルビ適用
-  applyRuby(".word-detail");
-  applyRuby(".word-detail *");
-  applyRuby(".word-meaning");
-  applyRuby(".word-meaning *");
-  applyRuby(".meaning-text");
-  applyRuby(".meaning-text *");
+applyRubyVisibility();
 
 
   // ▼ UI要素（no-ruby クラス付き）はふりがなを削除して固定表示
