@@ -509,3 +509,7 @@ a:hover {
   font-size: 1em;
 }
 
+.account-link {
+  margin-top: 30px;
+  text-align: center;
+}

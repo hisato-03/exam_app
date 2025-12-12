@@ -35,3 +35,16 @@ CREATE TABLE IF NOT EXISTS searched_words (
     INDEX idx_user_id (user_id),
     INDEX idx_word (word)
 );
+
+-- 動画視聴履歴テーブル
+CREATE TABLE IF NOT EXISTS video_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,                   -- users.id を参照
+    subject VARCHAR(50),                    -- 科目名
+    video_title VARCHAR(255),               -- 動画タイトル
+    video_path VARCHAR(255),                -- 動画ファイルのパス
+    watched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- 視聴日時
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_subject (subject)
+);
