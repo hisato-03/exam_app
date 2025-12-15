@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: exam-app
+    runtime: docker
+    plan: free
+    repo: https://github.com/hisato-03/exam_app
+    branch: main
+    dockerfilePath: ./Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: DB_HOST
+        value: exam-db
+      - key: DB_NAME
+        value: exam_app
+      - key: DB_USER
+        value: exam_user
+      - key: DB_PASS
+        value: exam_pass
+      - key: GOOGLE_CREDENTIALS_B64
+        value: （RenderのGUIで登録）
+
+  - type: pserv
+    name: exam-db
+    runtime: docker
+    plan: free
+    dockerfilePath: ./mysql/Dockerfile
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        value: rootpass
+      - key: MYSQL_DATABASE
+        value: exam_app
+      - key: MYSQL_USER
+        value: exam_user
+      - key: MYSQL_PASSWORD
+        value: exam_pass

@@ -1,5 +1,8 @@
 <?php
 require "auth.php"; // ログインチェック
+require_once __DIR__ . '/load_credentials.php';
+restore_credentials('GOOGLE_CREDENTIALS_ROOT_B64');
+
 require __DIR__ . '/vendor/autoload.php'; // Google API Client 読み込み
 
 $subject = $_GET['subject'] ?? '';

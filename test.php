@@ -14,6 +14,9 @@
  */
 
 require "auth.php";
+require_once __DIR__ . '/load_credentials.php';
+restore_credentials('GOOGLE_CREDENTIALS_ROOT_B64');
+
 // ▼ 科目パラメータを受け取る
 $subject = $_GET['subject'] ?? '';
 $dictJson = '{}';

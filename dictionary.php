@@ -1,6 +1,9 @@
 <?php
 session_start();
 require "auth.php";
+require_once __DIR__ . '/load_credentials.php';
+restore_credentials('GOOGLE_CREDENTIALS_ROOT_B64');
+
 require __DIR__ . '/vendor/autoload.php';
 
 // ▼ ユーザー情報

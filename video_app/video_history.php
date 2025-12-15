@@ -18,6 +18,8 @@ try {
 
 // ▼ Google Sheets から単元・科目名情報を取得
 require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../load_credentials.php';
+restore_credentials('GOOGLE_CREDENTIALS_VIDEO_B64');
 
 use Google\Client;
 use Google\Service\Sheets;

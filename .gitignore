@@ -5,6 +5,7 @@ src/vendor/
 /db_data/
 credentials.json
 node_modules/
+*.b64.txt
 
 # 動画ファイルを除外
 video_app/videos/

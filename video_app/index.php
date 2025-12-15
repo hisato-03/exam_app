@@ -4,6 +4,8 @@ require_once('../auth.php');
 
 // Google Sheets API 読み込み
 require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../load_credentials.php';
+restore_credentials('GOOGLE_CREDENTIALS_VIDEO_B64');
 
 use Google\Client;
 use Google\Service\Sheets;
