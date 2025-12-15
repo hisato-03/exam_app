@@ -19,8 +19,7 @@ RUN a2enmod rewrite
 RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo "Asia/Tokyo" > /etc/timezone
 
-# 作業ディレクトリを設定（docker-composeと合わせておくと便利）
-WORKDIR /var/www/html/exam_app
+# 作業ディレクトリを設定
 WORKDIR /var/www/html/exam_app
 
 # アプリのファイルをコピー
@@ -29,7 +28,5 @@ COPY . .
 # Composer install（必要なら）
 RUN composer install --no-dev --optimize-autoloader
 
-# アプリのファイルは docker-compose の volume でマウントされるので COPY は不要
-# ただし、ビルド時に composer install したい場合は COPY してから実行
-# COPY . .
-# RUN composer install --no-dev --optimize-autoloader
+# Apacheのドキュメントルートを exam_app に変更
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/exam_app|g' /etc/apache2/sites-available/000-default.conf
