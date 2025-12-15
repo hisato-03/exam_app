@@ -21,6 +21,13 @@ RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
 
 # 作業ディレクトリを設定（docker-composeと合わせておくと便利）
 WORKDIR /var/www/html/exam_app
+WORKDIR /var/www/html/exam_app
+
+# アプリのファイルをコピー
+COPY . .
+
+# Composer install（必要なら）
+RUN composer install --no-dev --optimize-autoloader
 
 # アプリのファイルは docker-compose の volume でマウントされるので COPY は不要
 # ただし、ビルド時に composer install したい場合は COPY してから実行
