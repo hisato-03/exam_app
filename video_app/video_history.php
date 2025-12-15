@@ -8,7 +8,7 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // ▼ 動画履歴取得（ユーザーごと）
-    $stmt = $pdo->prepare("SELECT * FROM video_history WHERE user_id=? ORDER BY created_at DESC");
+    $stmt = $pdo->prepare("SELECT * FROM video_history WHERE user_id=? ORDER BY watched_at DESC");
     $stmt->execute([$userId]);
     $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -39,10 +39,10 @@ $sheetValues = $response->getValues();
 $videoInfoMap = [];
 foreach ($sheetValues as $row) {
     $row = array_pad($row, 6, '');
-    $subjectCode = $row[0]; // A列
-    $subjectName = $row[1]; // B列
-    $unit = $row[3];        // D列
-    $fileName = $row[5];    // F列
+    $subjectCode = trim($row[0]); // A列
+    $subjectName = trim($row[1]); // B列（← 科目名）
+    $unit = trim($row[3]);        // D列
+    $fileName = trim($row[5]);    // F列
 
     if ($subjectCode && $fileName) {
         $fullPath = $subjectCode . '/' . $fileName;
@@ -85,7 +85,7 @@ foreach ($sheetValues as $row) {
                 <?php echo htmlspecialchars($info['unit']); ?>
               </a>
             </td>
-            <td><?php echo htmlspecialchars($row["created_at"]); ?></td>
+            <td><?php echo htmlspecialchars($row["watched_at"] ?? ''); ?></td>
           </tr>
         <?php endforeach; ?>
       </table>

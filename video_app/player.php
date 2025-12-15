@@ -11,12 +11,22 @@ if (strpos($videoPath, '..') !== false || !file_exists($fullPath)) {
 
 // 再生履歴を保存
 $userId = $_SESSION["user_id"] ?? 0;
+
+// パスから subject と video_title を抽出
+$parts = explode('/', $videoPath);
+$subjectCode = $parts[0] ?? '';
+$fileName = $parts[1] ?? '';
+$videoTitle = $fileName;
+
 try {
     $pdo = new PDO("mysql:host=db;dbname=exam_app;charset=utf8mb4", "exam_user", "exam_pass");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $stmt = $pdo->prepare("INSERT INTO video_history (user_id, video_path, created_at) VALUES (?, ?, NOW())");
-    $stmt->execute([$userId, $videoPath]);
+    $stmt = $pdo->prepare("
+        INSERT INTO video_history (user_id, subject, video_title, video_path, watched_at)
+        VALUES (?, ?, ?, ?, NOW())
+    ");
+    $stmt->execute([$userId, $subjectCode, $videoTitle, $videoPath]);
 
 } catch (PDOException $e) {
     // ログだけ残して続行
