@@ -1,0 +1,22 @@
+.git
+vendor
+node_modules
+*.log
+*.env
+*.zip
+*.tar
+*.gz
+*.bak
+.DS_Store
+*.b64.txt
+
+# 動画ファイルを除外
+video_app/videos/
+
+# ローカル設定ファイル
+*.DS_Store
+.vscode/
+
+# OSごとの不要ファイル
+Thumbs.db
+ehthumbs.db
