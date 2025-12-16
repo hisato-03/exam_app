@@ -22,8 +22,11 @@ RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
 # 作業ディレクトリを設定（/var/www/html）
 WORKDIR /var/www/html
 
-# exam_app ディレクトリ内のファイルを /var/www/html にコピー
+# メインアプリのファイルをコピー（index.php, test.php など）
 COPY . ./
+
+# video_app を明示的にサブディレクトリにコピー（上書き防止のため）
+COPY ./video_app/ ./video_app/
 
 # Composer install（必要なら）
 RUN composer install --no-dev --optimize-autoloader
