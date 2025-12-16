@@ -34,5 +34,8 @@ RUN composer install --no-dev --optimize-autoloader
 # Apacheのドキュメントルートを exam_app に変更
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/exam_app|g' /etc/apache2/sites-available/000-default.conf
 
+# 🔧 RailwayのPORTに対応
+RUN sed -i "s/80/${PORT}/g" /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
+
 # 🔧 Apache起動コマンド（PORT対応も後で追加できる）
 CMD ["apache2ctl", "-D", "FOREGROUND"]
