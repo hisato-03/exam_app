@@ -19,35 +19,24 @@ RUN a2enmod rewrite
 RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo "Asia/Tokyo" > /etc/timezone
 
-# 作業ディレクトリを設定
-WORKDIR /var/www/html/exam_app
+# 作業ディレクトリを設定（/var/www/html）
+WORKDIR /var/www/html
 
-# アプリのファイルをコピー
-COPY . .
+# exam_app ディレクトリの中身を /var/www/html にコピー
+COPY ./exam_app/ ./
 
 # Composer install（必要なら）
 RUN composer install --no-dev --optimize-autoloader
 
-# 🔧 カスタムエントリポイントスクリプトをコピーして実行権限を付与
+# カスタムエントリポイントスクリプトをコピーして実行権限を付与
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# 🔧 Apache起動をカスタムスクリプトに任せる
-CMD ["docker-entrypoint.sh"]
-
-RUN echo '<Directory /var/www/html/exam_app>\n\
-    AllowOverride All\n\
-    Require all granted\n\
-</Directory>' >> /etc/apache2/apache2.conf
-
-# Apacheのドキュメントルートを /exam_app に変更
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/exam_app|g' /etc/apache2/sites-available/000-default.conf
-
 # .htaccess を有効にするためのディレクトリ設定
-RUN echo '<Directory /var/www/html/exam_app>\n\
+RUN echo '<Directory /var/www/html>\n\
     AllowOverride All\n\
     Require all granted\n\
 </Directory>' >> /etc/apache2/apache2.conf
 
-# dummy change to force rebuild
+# Apache起動時にログ出力を確認できるようにする
 CMD ["sh", "-c", "tail -F /tmp/debug.log & exec docker-entrypoint.sh"]
