@@ -37,10 +37,6 @@ COPY ./video_app/ ./video_app/
 # Composer install（必要なら）
 RUN composer install --no-dev --optimize-autoloader
 
-# カスタムエントリポイントスクリプトをコピーして実行権限を付与
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
 # .htaccess を有効にするためのディレクトリ設定
 RUN echo '<Directory /var/www/html>\n\
     AllowOverride All\n\
@@ -53,8 +49,5 @@ RUN echo "DirectoryIndex index.php" >> /etc/apache2/apache2.conf
 # ポート80を明示的に公開（Railwayが検出できるように）
 EXPOSE 80
 
-# ENTRYPOINT を明示的に指定（Apache起動スクリプト）
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-
-# CMD は Apache の標準起動コマンド
+# Apache を直接起動（ENTRYPOINT は使わず CMD のみ）
 CMD ["apache2-foreground"]
