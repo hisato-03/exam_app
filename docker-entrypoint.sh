@@ -1,7 +1,9 @@
 #!/bin/bash
-# MPMの競合を完全に解消
-rm -f /etc/apache2/mods-enabled/mpm_event.*
-rm -f /etc/apache2/mods-available/mpm_event.*
+
+# MPMモジュールをすべて無効化してから prefork を有効化
+a2dismod mpm_event || true
+a2dismod mpm_worker || true
+a2dismod mpm_prefork || true
 a2enmod mpm_prefork
 
 # Apacheを起動
