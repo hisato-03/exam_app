@@ -15,6 +15,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Apacheのrewriteモジュールを有効化
 RUN a2enmod rewrite
 
+# 🔧 MPMの競合を解消！
+RUN a2dismod mpm_event && a2enmod mpm_prefork
+
 # タイムゾーンを日本時間に設定
 RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo "Asia/Tokyo" > /etc/timezone
@@ -30,3 +33,6 @@ RUN composer install --no-dev --optimize-autoloader
 
 # Apacheのドキュメントルートを exam_app に変更
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/exam_app|g' /etc/apache2/sites-available/000-default.conf
+
+# 🔧 Apache起動コマンド（PORT対応も後で追加できる）
+CMD ["apache2ctl", "-D", "FOREGROUND"]
