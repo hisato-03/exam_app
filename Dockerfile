@@ -19,6 +19,12 @@ RUN a2enmod rewrite
 RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo "Asia/Tokyo" > /etc/timezone
 
+# Apacheが全インターフェースでポート80をリッスンするように設定
+RUN echo "Listen 0.0.0.0:80" > /etc/apache2/ports.conf
+
+# ServerName 警告を抑制
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 # 作業ディレクトリを設定（/var/www/html）
 WORKDIR /var/www/html
 
