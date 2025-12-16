@@ -19,10 +19,11 @@ RUN a2enmod rewrite
 RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo "Asia/Tokyo" > /etc/timezone
 
-# 🔧 MPMの競合を完全に解消（mpm_eventを物理削除して、mpm_preforkを有効化）
+# 🔧 MPMの競合を完全に封じる（enabled + available 両方削除し、preforkを明示）
 RUN rm -f /etc/apache2/mods-enabled/mpm_event.* && \
     rm -f /etc/apache2/mods-available/mpm_event.* && \
-    a2enmod mpm_prefork
+    echo "LoadModule mpm_prefork_module /usr/lib/apache2/modules/mod_mpm_prefork.so" > /etc/apache2/mods-enabled/mpm_prefork.load
+
 
 # 作業ディレクトリを設定
 WORKDIR /var/www/html/exam_app
