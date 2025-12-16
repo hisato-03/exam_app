@@ -15,6 +15,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Apacheのrewriteモジュールを有効化
 RUN a2enmod rewrite
 
+# MPMの競合を防ぐ：event/worker を無効化し、prefork を有効化
+RUN a2dismod mpm_event mpm_worker && a2enmod mpm_prefork
+
 # タイムゾーンを日本時間に設定
 RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo "Asia/Tokyo" > /etc/timezone
