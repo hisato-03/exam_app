@@ -31,11 +31,8 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 # 作業ディレクトリを設定（/var/www/html）
 WORKDIR /var/www/html
 
-# メインアプリのファイルをコピー（index.php, test.php など）
+# アプリ全体をコピー（Dockerfileと同じ階層にある前提）
 COPY . ./
-
-# video_app を明示的にサブディレクトリにコピー（上書き防止のため）
-COPY ./video_app/ ./video_app/
 
 # Composer install（必要なら）
 RUN composer install --no-dev --optimize-autoloader
@@ -49,7 +46,7 @@ RUN echo '<Directory /var/www/html>\n\
 # Apacheが index.php を優先して読み込むように設定
 RUN echo "DirectoryIndex index.php" >> /etc/apache2/apache2.conf
 
-# ポート80を明示的に公開（Railwayが検出できるように）
+# ポート80を明示的に公開（RailwayやRenderが検出できるように）
 EXPOSE 80
 
 # Apache を直接起動（ENTRYPOINT は使わず CMD のみ）
