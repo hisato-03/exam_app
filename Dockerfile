@@ -50,6 +50,9 @@ RUN echo '<Directory /var/www/html>\n\
 # Apacheが index.php を優先して読み込むように設定
 RUN echo "DirectoryIndex index.php" >> /etc/apache2/apache2.conf
 
+# ポート80を明示的に公開（Railwayが検出できるように）
+EXPOSE 80
+
 # ENTRYPOINT を明示的に指定（Apache起動スクリプト）
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
