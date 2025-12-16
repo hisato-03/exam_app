@@ -39,3 +39,12 @@ RUN echo '<Directory /var/www/html/exam_app>\n\
     AllowOverride All\n\
     Require all granted\n\
 </Directory>' >> /etc/apache2/apache2.conf
+
+# Apacheのドキュメントルートを /exam_app に変更
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/exam_app|g' /etc/apache2/sites-available/000-default.conf
+
+# .htaccess を有効にするためのディレクトリ設定
+RUN echo '<Directory /var/www/html/exam_app>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' >> /etc/apache2/apache2.conf
