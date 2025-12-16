@@ -19,12 +19,6 @@ RUN a2enmod rewrite
 RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo "Asia/Tokyo" > /etc/timezone
 
-# 🔧 MPMの競合を完全に封じる（enabled + available 両方削除し、preforkを明示）
-RUN rm -f /etc/apache2/mods-enabled/mpm_event.* && \
-    rm -f /etc/apache2/mods-available/mpm_event.* && \
-    echo "LoadModule mpm_prefork_module /usr/lib/apache2/modules/mod_mpm_prefork.so" > /etc/apache2/mods-enabled/mpm_prefork.load
-
-
 # 作業ディレクトリを設定
 WORKDIR /var/www/html/exam_app
 
@@ -37,8 +31,12 @@ RUN composer install --no-dev --optimize-autoloader
 # Apacheのドキュメントルートを exam_app に変更
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/exam_app|g' /etc/apache2/sites-available/000-default.conf
 
-# 🔧 RailwayのPORTに対応
+# RailwayのPORTに対応
 RUN sed -i "s/80/${PORT}/g" /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
 
-# Apache起動コマンド
-CMD ["apache2ctl", "-D", "FOREGROUND"]
+# 🔧 カスタムエントリポイントスクリプトをコピーして実行権限を付与
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# 🔧 Apache起動をカスタムスクリプトに任せる
+CMD ["docker-entrypoint.sh"]
