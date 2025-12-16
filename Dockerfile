@@ -50,3 +50,4 @@ RUN echo '<Directory /var/www/html/exam_app>\n\
 </Directory>' >> /etc/apache2/apache2.conf
 
 # dummy change to force rebuild
+CMD ["sh", "-c", "tail -F /tmp/debug.log & exec docker-entrypoint.sh"]

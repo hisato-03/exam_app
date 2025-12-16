@@ -1,4 +1,5 @@
 <?php
+file_put_contents('/tmp/debug.log', "✅ index.php reached at " . date('c') . "\n", FILE_APPEND);
 $host = getenv('DB_HOST') ?: 'db';
 $db   = getenv('DB_NAME') ?: 'exam_app';
 $user = getenv('DB_USER') ?: 'exam_user';
@@ -9,7 +10,7 @@ try {
     $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
-    
+    file_put_contents('/tmp/debug.log', "✅ DB connected successfully\n", FILE_APPEND);
     // 初期テーブル（なければ作成）
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS users (
@@ -20,6 +21,7 @@ try {
         )
     ");
  } catch (PDOException $e) {
+    file_put_contents('/tmp/debug.log', "❌ DB connection failed: " . $e->getMessage() . "\n", FILE_APPEND);
     http_response_code(500);
     echo "❌ 接続エラー: " . htmlspecialchars($e->getMessage());
 }   
