@@ -44,8 +44,8 @@ RUN echo '<Directory /var/www/html>\n\
 # Apacheが index.php を優先して読み込むように設定
 RUN echo "DirectoryIndex index.php" >> /etc/apache2/apache2.conf
 
-# デバッグ用：ファイル一覧をログに出力
-RUN ls -al /var/www/html > /tmp/debug.log
+# ENTRYPOINT を明示的に指定（Apache起動スクリプト）
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
-# Apache起動時に debug.log を監視しつつ起動
-CMD ["sh", "-c", "tail -F /tmp/debug.log & exec docker-entrypoint.sh"]
+# CMD は Apache の標準起動コマンド
+CMD ["apache2-foreground"]
