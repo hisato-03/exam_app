@@ -34,3 +34,8 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # 🔧 Apache起動をカスタムスクリプトに任せる
 CMD ["docker-entrypoint.sh"]
+
+RUN echo '<Directory /var/www/html/exam_app>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' >> /etc/apache2/apache2.conf
