@@ -48,3 +48,5 @@ RUN echo '<Directory /var/www/html/exam_app>\n\
     AllowOverride All\n\
     Require all granted\n\
 </Directory>' >> /etc/apache2/apache2.conf
+
+# dummy change to force rebuild
