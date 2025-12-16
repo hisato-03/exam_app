@@ -28,9 +28,6 @@ COPY . .
 # Composer install（必要なら）
 RUN composer install --no-dev --optimize-autoloader
 
-# RailwayのPORTに対応
-RUN sed -i "s/80/${PORT}/g" /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
-
 # 🔧 カスタムエントリポイントスクリプトをコピーして実行権限を付与
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

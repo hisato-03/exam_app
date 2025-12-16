@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# MPMモジュールをすべて無効化してから prefork を有効化
+# MPMをすべて無効化してから prefork を有効化
 a2dismod mpm_event || true
 a2dismod mpm_worker || true
 a2dismod mpm_prefork || true
