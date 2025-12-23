@@ -34,28 +34,30 @@ try {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1 class="center-text">学習する内容を選んでください</h1>
+  <div class="intro-section">
+    <h1 class="intro-title">オンライン介護学習アプリ</h1>
+    <p class="intro-lead">
+      学習する内容を選んでください。<br>
+      下のボタンから目的のアプリを選んでください。
+    </p>
+    <ul class="intro-list">
+      <li>📘 <strong>試験アプリ</strong>：過去問や練習問題を解いて、解説を確認できます。</li>
+      <li>🎥 <strong>動画アプリ</strong>：解説動画を視聴して、理解を深めることができます。</li>
+    </ul>
+  </div>
 
-    <div class="center-text">
-        <p class="intro">
-            このページは学習用アプリの入口です。<br>
-            下のボタンから目的のアプリを選んでください。
-        </p>
-        <ul class="intro-list">
-            <li>📘 <strong>試験アプリ</strong>：過去問や練習問題を解いて、解説を確認できます。</li>
-            <li>🎥 <strong>動画アプリ</strong>：解説動画を視聴して、理解を深めることができます。</li>
-        </ul>
+  <div class="app-links center-text">
+    <a href="/exam_app/test.php" class="btn btn-primary">📘 試験問題学習へ</a>
+    <a href="/exam_app/video_app/index.php" class="btn btn-success">🎥 動画学習へ</a>
+  </div>
 
-        <div class="app-links">
-            <a href="/exam_app/test.php" class="btn btn-primary">📘 試験問題学習へ</a>
-            <a href="/exam_app/video_app/index.php" class="btn btn-success">🎥 動画学習へ</a>
-        </div>
+  <div class="account-link center-text">
+    <a href="/exam_app/login.php" class="btn btn-secondary">🔐 ログインページへ</a>
+  </div>
 
-        <div class="account-link center-text">
-         <a href="/exam_app/login.php" class="btn btn-secondary">🔐 ログインページへ</a>
-        </div>
-
-
-    </div>
+  <div class="contact-link center-text">
+    <a href="https://forms.gle/nw84hGPLwEqgCtXu8" target="_blank" class="btn btn-info">📩 お問い合わせ</a>
+  </div>
 </body>
+
 </html>

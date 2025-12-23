@@ -3,15 +3,130 @@ body {
   font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
   background-color: #f5f5f5;
   padding: 30px;
+  color: #222;
+  line-height: 1.6;
 }
 
 .container {
   max-width: 900px;
   margin: 0 auto;
   background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* ▼ 導入セクション */
+.intro-section {
+  max-width: 700px;
+  margin: 0 auto 30px auto;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.intro-title {
+  font-size: 2em;
+  margin-bottom: 16px;
+  color: #222;
+  text-align: center;
+}
+
+.intro-lead {
+  font-size: 1.15em;
+  color: #444;
+  margin-bottom: 20px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.intro-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0 auto;
+  color: #333;
+  font-size: 1.05em;
+  text-align: center;
+}
+
+.intro-list li {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+/* ▼ ボタン配置 */
+.app-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.app-links a {
+  min-width: 220px;
+  padding: 14px 24px;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.3s, transform 0.2s;
+  color: #fff;
+}
+
+.app-links a:hover {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+
+.btn-primary {
+  background-color: #007bff;
+}
+.btn-primary:hover {
+  background-color: #0069d9;
+}
+
+.btn-success {
+  background-color: #28a745;
+}
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+}
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+}
+.btn-info:hover {
+  background-color: #138496;
+}
+
+/* ▼ ボタン共通 */
+button, .btn {
+  font-size: 1.1em;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+button:hover, .btn:hover {
+  transform: scale(1.02);
+}
+
+/* ▼ アカウント・問い合わせリンク */
+.account-link,
+.contact-link {
+  margin-top: 20px;
+  text-align: center;
 }
 
 /* ▼ 問題カード */
@@ -25,10 +140,10 @@ body {
 
 /* ▼ 問題文 */
 .question-text {
-  font-size: 1.1em;
-  font-weight: bold;
+  font-size: 1.2em;
+  font-weight: 600;
   margin-bottom: 15px;
-  color: #333;
+  color: #111;
 }
 
 /* ▼ 選択肢 */
@@ -39,87 +154,19 @@ body {
 }
 
 .choices li {
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  background-color: #f0f8ff;
-  border-left: 4px solid #2196f3;
-  border-radius: 4px;
-  color: #333;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  background-color: #e8f4fd;
+  border-left: 5px solid #1e88e5;
+  border-radius: 6px;
+  color: #222;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.1s;
 }
 
 .choices li:hover {
-  background-color: #e0f0ff;
-}
-
-/* ▼ ボタン群の横並び調整 */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-/* ▼ ボタン・セレクト共通スタイル */
-button, .btn, .subject-select {
-  height: 40px;
-  padding: 0 14px;
-  font-size: 1em;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  line-height: 1;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-/* ▼ 科目切り替えボタン */
-.btn-subject {
-  background-color: #2196F3;
-  color: #fff;
-  border: none;
-}
-.btn-subject:hover {
-  background-color: #1976D2;
-}
-
-/* ▼ ふりがな表示ボタン */
-.btn-ruby {
-  background-color: #4CAF50;
-  color: #fff;
-  border: none;
-}
-.btn-ruby:hover {
-  background-color: #388E3C;
-}
-
-/* ▼ 回答送信・解説表示ボタン（主役ボタン） */
-.btn-answer {
-  background-color: #FF9800;
-  color: #fff;
-  font-size: 1.1em;
-  padding: 12px 20px;
-  margin-top: 20px;
-  border: none;
-  border-radius: 8px;
-}
-.btn-answer:hover {
-  background-color: #F57C00;
-}
-
-.btn-explanation {
-  background-color: #9C27B0;
-  color: #fff;
-  font-size: 1.1em;
-  padding: 12px 20px;
-  margin-top: 12px;
-  border: none;
-  border-radius: 8px;
-}
-.btn-explanation:hover {
-  background-color: #7B1FA2;
+  background-color: #d0eaff;
+  transform: translateX(2px);
 }
 
 /* ▼ 解答・解説 */
@@ -127,6 +174,7 @@ button, .btn, .subject-select {
   font-weight: bold;
   color: #2196f3;
   margin-bottom: 10px;
+  text-align: center;
 }
 
 .explanation {
@@ -189,61 +237,13 @@ a:hover {
   text-decoration: underline;
 }
 
-/* ▼ ツールバー全体を左右に分ける */
-.toolbar {
-  display: flex;
-  justify-content: space-between; /* 左右に分ける */
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-/* ▼ 左側フォーム（科目選択＋ボタン群） */
-.toolbar-form {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* ▼ 右側リンク群（ユーザー名＋履歴＋ログアウト＋ログイン） */
-.toolbar-links {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* ▼ ユーザーラベル */
-.user-label {
-  font-weight: bold;
-  margin-right: 8px;
-}
-
-/* ▼ 履歴・ログアウト・ログインボタン */
-.btn-history,
-.btn-logout,
-.btn-login {
-  background-color: #eee;
-  color: #333;
-  padding: 6px 12px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.btn-history:hover,
-.btn-logout:hover,
-.btn-login:hover {
-  background-color: #ddd;
-}
-
 /* ▼ ログイン画面全体を中央寄せ */
 .login-container {
   display: flex;
-  justify-content: center;   /* 横方向中央 */
-  align-items: center;       /* 縦方向中央 */
-  height: 100vh;             /* 画面全体の高さを確保 */
-  background-color: #f5f5f5; /* 背景色を薄く */
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f5f5;
 }
 
 /* ▼ ログインフォームカード */
@@ -256,7 +256,6 @@ a:hover {
   text-align: center;
 }
 
-/* ▼ フォーム内のラベルと入力欄 */
 .login-form label {
   display: block;
   margin-bottom: 6px;
@@ -273,7 +272,6 @@ a:hover {
   border-radius: 4px;
 }
 
-/* ▼ ログインボタン */
 .login-form button {
   width: 100%;
   padding: 10px;
@@ -289,15 +287,6 @@ a:hover {
 .login-form button:hover {
   background-color: #1976D2;
 }
-
-.btn-container {
-  text-align: center;   /* 中央寄せ */
-  margin-top: 10px;
-}
-.btn-container button {
-  margin: 0 8px;        /* ボタン間に余白 */
-}
-
 
 /* ▼ スマホ対応 */
 @media screen and (max-width: 600px) {
@@ -318,7 +307,7 @@ a:hover {
     font-size: 0.95em;
   }
 
-  button, .btn, .subject-select {
+  button, .btn {
     width: 100%;
     font-size: 1.1em;
   }
@@ -331,185 +320,47 @@ a:hover {
     flex-direction: column;
     align-items: stretch;
   }
+
+  .app-links,
+  .account-link,
+  .contact-link {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .app-links a,
+  .account-link a,
+  .contact-link a {
+    width: 100%;
+    max-width: 300px;
+    margin: 10px 0;
+  }
+
+  .intro-title {
+    font-size: 1.5em;
+  }
+
+  .intro-lead {
+    font-size: 1em;
+  }
 }
 
-.btn-nav {
-  display: inline-block;
-  margin: 0 10px;
-  padding: 8px 16px;
-  background-color: #2196F3;
-  color: #fff;
-  text-decoration: none;
-  border-radius: 6px;
+.btn-info {
+  background-color: #d0f0f7;       /* 明るい水色系 */
+  color: #004d5a;                  /* 濃い青緑で視認性アップ */
   font-weight: bold;
-  transition: background-color 0.3s;
-}
-
-.btn-nav:hover {
-  background-color: #1976D2;
-}
-
-.btn-nav.disabled {
-  background-color: #ccc;
-  color: #666;
-  cursor: not-allowed;
-  /* pointer-events: none; ← コメントアウト */
-}
-
-.answer {
-  text-align: center; /* 判定結果全体を中央寄せ */
-}
-
-.judgement-correct,
-.judgement-wrong {
-  display: inline-block;
-  margin: 10px 0;
-  font-size: 2.5em; /* 大きく強調 */
-}
-
-.question-image {
-    max-width: 300px;   /* 横幅を制限 */
-    height: auto;       /* 縦横比を維持 */
-    display: block;     /* 改行して表示 */
-    margin: 10px 0;     /* 上下に余白 */
-}
-
-.center-text {
-    text-align: center;
-}
-
-.app-links {
-    margin-top: 20px;
-}
-
-.app-links a {
-    display: inline-block;
-    padding: 10px 20px;
-    margin: 10px;
-    text-decoration: none;
-    border-radius: 5px;
-    color: #fff;
-}
-
-.btn-primary {
-    background-color: #007bff;
-}
-
-.btn-success {
-    background-color: #28a745;
-}
-.intro-list {
-    list-style-type: none;  /* ← 黒丸を消す */
-    padding-left: 0;        /* ← 左の余白も消す */
-    margin: 0 0 20px 0;
-    color: #444;
-}
-.intro-list li {
-    margin: 5px 0;
-}
-
-.btn-secondary {
-    background-color: #6c757d;
-    color: #fff;
-    padding: 8px 16px;
-    text-decoration: none;
-    border-radius: 5px;
-    margin-left: 10px;
-}
-.btn-secondary:hover {
-    background-color: #5a6268;
-}
-
-/* ▼ 辞書検索ページの中央寄せと見た目改善 */
-.dictionary-container {
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 20px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.dictionary-container h1 {
-  margin-bottom: 20px;
-  color: #333;
-  text-align: center;
-}
-
-.search-bar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.search-bar label {
-  font-weight: bold;
-}
-
-.search-bar select {
-  padding: 8px 12px;
-  font-size: 1em;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-.result-card {
-  margin-top: 20px;
-  padding: 20px;
-  background: #fafafa;
-  border-left: 4px solid #2196F3;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.result-card .word {
-  font-size: 1.4em;
-  font-weight: bold;
-  color: #222;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.result-card .meaning {
   font-size: 1.1em;
-  color: #555;
-  text-align: center;
+  padding: 12px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 10px;
+  border: 2px solid #00a0b0;       /* 枠線で引き締め */
+  transition: background-color 0.3s, color 0.3s;
 }
 
-.links {
-  margin-top: 30px;
-  text-align: center;
+.btn-info:hover {
+  background-color: #b8e4ef;
+  color: #003b45;
 }
 
-.links a {
-  margin: 0 10px;
-  font-weight: bold;
-  text-align: center;
-}
-
-.result-card {
-  text-align: center;
-}
-.result-card .word,
-.result-card .meaning {
-  text-align: center;
-}
-
-.toggle-ruby {
-  text-align: center;   /* 中央寄せ */
-  margin-top: 1em;      /* 上に少し余白 */
-}
-
-.toggle-ruby button {
-  padding: 0.5em 1.2em; /* ボタンの見た目を少し整える */
-  font-size: 1em;
-}
-
-.account-link {
-  margin-top: 30px;
-  text-align: center;
-}
