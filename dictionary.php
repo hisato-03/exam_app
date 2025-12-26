@@ -72,7 +72,7 @@ $dictMapJson = json_encode($dictMap, JSON_UNESCAPED_UNICODE);
 echo '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>辞書ページ</title>';
 echo '<link rel="stylesheet" href="style.css">';
 echo '<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>';
-echo "<script>const dictMap = {$dictMapJson};</script>";
+echo "<script>window.dictMap = {$dictMapJson};</script>";
 echo '<script src="script.js"></script>';
 echo '</head><body>';
 
@@ -132,8 +132,8 @@ echo <<<HTML
 HTML;
 
 if (!empty($meaning)) {
-    echo "<div class='word-meaning content-ruby'><strong>意味:</strong> <span class='meaning-text'>" . htmlspecialchars($meaning) . "</span></div>";
-} else {
+    echo "<div class='word-meaning ruby-target'><strong>意味:</strong> <span class='meaning-text'>" . htmlspecialchars($meaning) . "</span></div>";
+}else {
     echo "<div class='word-meaning'><strong>意味:</strong> 辞書に登録されていません</div>";
 }
 
@@ -161,23 +161,37 @@ echo <<<HTML
 
   
 <script>
+// 1. 親ウィンドウ（試験画面）から開かれた場合の処理
 if (window.opener) {
   document.getElementById("backLink").style.display = "none";
 }
+
+// 2. 翻訳データの定義
 const translations = {$translationsJson};
-$('#lang-select').on('change', function() {
-  const lang = $(this).val();
-  let label = '';
-  switch(lang) {
-    case 'en': label = 'English'; break;
-    case 'tl': label = 'Tagalog'; break;
-    case 'my': label = 'Myanmar'; break;
-    case 'th': label = 'Thai'; break;
-  }
-  $('#translation-result').html(
-    '<div class="word"><strong>' + label + ':</strong></div>' +
-    '<div class="meaning">' + translations[lang] + '</div>'
-  );
+
+// 3. ページ読み込み完了時の処理
+$(function() {
+    // --- 【追加】初期表示の日本語（意味文）にルビを適用 ---
+    if (typeof window.applyRuby === "function") {
+      window.applyRuby('.ruby-target');
+    }
+    // 4. 言語切り替え時の処理（既存のものをjQueryの作法で整理）
+    $('#lang-select').on('change', function() {
+        const lang = $(this).val();
+        let label = '';
+        switch(lang) {
+            case 'en': label = 'English'; break;
+            case 'tl': label = 'Tagalog'; break;
+            case 'my': label = 'Myanmar'; break;
+            case 'th': label = 'Thai'; break;
+        }
+        
+        // 翻訳結果の書き換え
+        $('#translation-result').html(
+            '<div class="word"><strong>' + label + ':</strong></div>' +
+            '<div class="meaning">' + translations[lang] + '</div>'
+        );
+    });
 });
 </script>
 

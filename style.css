@@ -364,3 +364,83 @@ a:hover {
   color: #003b45;
 }
 
+/* ルビが付いている単語のスタイル */
+.clickable-ruby {
+    cursor: pointer;
+    position: relative;
+    padding: 0 1px;
+    border-radius: 2px;
+}
+
+.clickable-ruby:hover {
+    background-color: rgba(33, 150, 243, 0.1);
+    text-decoration: underline;
+    color: #1976D2;
+}
+
+/* ★重要: ハイライトしたときにルビ(rt)を選択対象から外す */
+rt {
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none; /* rt自体はクリックに反応させない */
+}
+
+.app-links {
+  display: flex;
+  flex-direction: column; /* 縦に並べる */
+  align-items: center;
+  gap: 15px; /* ボタン同士の隙間 */
+}
+
+/* ツールバー全体の整理 */
+.toolbar {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column; /* 縦に並べる */
+    gap: 15px;
+}
+
+/* メインのフォーム（科目・形式） */
+.toolbar-form {
+    display: flex;
+    flex-wrap: wrap; /* 折り返し可能に */
+    justify-content: center; /* 中央寄せ */
+    align-items: center;
+    gap: 10px;
+}
+
+/* 科目セレクトボックスを目立たせる */
+.subject-select {
+    padding: 10px;
+    border: 2px solid #2196F3;
+    border-radius: 6px;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+/* ボタン群の整理 */
+.toolbar-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd; /* 境界線を引く */
+}
+
+/* ボタンの共通デザイン */
+.btn {
+    padding: 8px 15px;
+    border-radius: 20px; /* 丸みを持たせてボタンらしく */
+    font-size: 0.9em;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}

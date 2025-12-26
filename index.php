@@ -48,6 +48,9 @@ try {
 
   <div class="app-links center-text">
     <a href="/exam_app/test.php" class="btn btn-primary">📘 試験問題学習へ</a>
+    
+    <a href="/exam_app/review.php" class="btn" style="background-color: #f39c12; color: white;">🔥 苦手克服モード</a>
+    
     <a href="/exam_app/video_app/index.php" class="btn btn-success">🎥 動画学習へ</a>
   </div>
 

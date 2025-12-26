@@ -53,7 +53,7 @@ echo json_encode([
     "exam_number" => $examNumber,
     "answer"      => $answer,
     "correct"     => $correct,
-    "is_correct"  => $isCorrect,
+    "is_correct"  => (bool)$isCorrect, // JavaScriptで扱いやすいようboolに変換
     "judgement"   => $isCorrect ? "○" : "×",
     "saved_at"    => date("Y-m-d H:i:s"),
     "subject"     => $subject
