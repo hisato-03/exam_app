@@ -25,107 +25,70 @@ body {
 }
 
 .intro-title {
-  font-size: 2em;
+  font-size: 2.2em;
   margin-bottom: 16px;
-  color: #222;
-  text-align: center;
+  color: #1a1a1a;
+  font-weight: 800;
 }
 
 .intro-lead {
   font-size: 1.15em;
   color: #444;
   margin-bottom: 20px;
-  line-height: 1.6;
-  text-align: center;
 }
 
 .intro-list {
   list-style-type: none;
   padding-left: 0;
-  margin: 0 auto;
-  color: #333;
-  font-size: 1.05em;
-  text-align: center;
+  display: inline-block;
+  text-align: left;
 }
 
 .intro-list li {
-  margin: 8px 0;
-  line-height: 1.6;
+  margin: 10px 0;
+  padding-left: 5px;
 }
 
-/* ▼ ボタン配置 */
+/* ▼ ボタン・リンクラッパー (index.php用) */
 .app-links {
   display: flex;
-  justify-content: center;
-  gap: 24px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
   margin-top: 30px;
 }
 
-.app-links a {
-  min-width: 220px;
-  padding: 14px 24px;
+/* 共通ボタン・リンクスタイル */
+.btn, .app-links a {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  padding: 16px 24px;
   font-size: 1.1em;
   font-weight: bold;
   text-align: center;
-  border-radius: 6px;
+  border-radius: 12px;
   text-decoration: none;
-  transition: background-color 0.3s, transform 0.2s;
-  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.app-links a:hover {
-  transform: translateY(-2px);
+.btn:hover, .app-links a:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
   opacity: 0.95;
 }
 
-.btn-primary {
-  background-color: #007bff;
-}
-.btn-primary:hover {
-  background-color: #0069d9;
-}
+/* ボタンカラーバリエーション */
+.btn-primary { background-color: #007bff; color: #fff; }
+.btn-success { background-color: #28a745; color: #fff; }
+.btn-secondary { background-color: #6c757d; color: #fff; }
+.btn-info { background-color: #17a2b8; color: #fff; }
 
-.btn-success {
-  background-color: #28a745;
-}
-.btn-success:hover {
-  background-color: #218838;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-}
-.btn-secondary:hover {
-  background-color: #5a6268;
-}
-
-.btn-info {
-  background-color: #17a2b8;
-}
-.btn-info:hover {
-  background-color: #138496;
-}
-
-/* ▼ ボタン共通 */
-button, .btn {
-  font-size: 1.1em;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-  transition: background-color 0.3s, transform 0.1s;
-}
-
-button:hover, .btn:hover {
-  transform: scale(1.02);
-}
-
-/* ▼ アカウント・問い合わせリンク */
-.account-link,
-.contact-link {
-  margin-top: 20px;
+/* センターテキストクラス */
+.center-text {
   text-align: center;
 }
 
@@ -138,12 +101,13 @@ button:hover, .btn:hover {
   margin-bottom: 30px;
 }
 
-/* ▼ 問題文 */
 .question-text {
-  font-size: 1.2em;
+  font-size: 1.25em;
   font-weight: 600;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   color: #111;
+  border-left: 4px solid #2196f3;
+  padding-left: 15px;
 }
 
 /* ▼ 選択肢 */
@@ -154,46 +118,38 @@ button:hover, .btn:hover {
 }
 
 .choices li {
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  background-color: #e8f4fd;
-  border-left: 5px solid #1e88e5;
-  border-radius: 6px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  background-color: #f0f7ff;
+  border: 1px solid #d0e3f5;
+  border-radius: 8px;
   color: #222;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition: all 0.2s;
 }
 
 .choices li:hover {
-  background-color: #d0eaff;
-  transform: translateX(2px);
+  background-color: #e1f0ff;
+  border-color: #2196f3;
+  transform: scale(1.01);
 }
 
 /* ▼ 解答・解説 */
 .answer {
   font-weight: bold;
-  color: #2196f3;
+  color: #d32f2f;
   margin-bottom: 10px;
   text-align: center;
+  font-size: 1.2em;
 }
 
 .explanation {
   font-size: 0.95em;
-  color: #555;
-  background-color: #f9f9f9;
-  padding: 10px;
-  border-left: 4px solid #ccc;
-  border-radius: 4px;
-}
-
-/* ▼ 科目選択フォーム */
-form {
-  margin-bottom: 20px;
-}
-
-label[for="subject"] {
-  font-weight: bold;
-  margin-right: 8px;
+  color: #444;
+  background-color: #fff9c4;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
 }
 
 /* ▼ テーブル */
@@ -201,170 +157,65 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
+  border: 1px solid #eee;
+  padding: 12px;
   text-align: center;
 }
 
 th {
   background: #2196f3;
   color: #fff;
-}
-
-/* ▼ 判定の色分け */
-.correct {
-  color: green;
   font-weight: bold;
 }
 
-.wrong {
-  color: red;
-  font-weight: bold;
+tr:nth-child(even) {
+  background-color: #f9f9f9;
 }
 
-/* ▼ リンク */
-a {
-  display: inline-block;
-  margin-top: 20px;
-  color: #2196f3;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-/* ▼ ログイン画面全体を中央寄せ */
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f5f5f5;
-}
-
-/* ▼ ログインフォームカード */
-.login-form {
-  background-color: #fff;
-  padding: 30px 40px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  width: 300px;
-  text-align: center;
-}
-
-.login-form label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: bold;
-  text-align: left;
-}
-
-.login-form input[type="text"],
-.login-form input[type="password"] {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.login-form button {
-  width: 100%;
-  padding: 10px;
-  background-color: #2196F3;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 1em;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.login-form button:hover {
-  background-color: #1976D2;
-}
-
-/* ▼ スマホ対応 */
-@media screen and (max-width: 600px) {
-  body {
-    padding: 15px;
-  }
-
-  .container, .question-card {
-    padding: 16px;
-  }
-
-  .question-text {
-    font-size: 1em;
-  }
-
-  .choices li {
-    padding: 12px;
-    font-size: 0.95em;
-  }
-
-  button, .btn {
-    width: 100%;
-    font-size: 1.1em;
-  }
-
-  .explanation {
-    font-size: 0.9em;
-  }
-
-  .toolbar {
+/* ▼ ツールバー (test.php用) */
+.toolbar {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    display: flex;
     flex-direction: column;
-    align-items: stretch;
-  }
+    gap: 15px;
+}
 
-  .app-links,
-  .account-link,
-  .contact-link {
-    flex-direction: column;
+.toolbar-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
-  }
+    gap: 12px;
+}
 
-  .app-links a,
-  .account-link a,
-  .contact-link a {
-    width: 100%;
-    max-width: 300px;
-    margin: 10px 0;
-  }
-
-  .intro-title {
-    font-size: 1.5em;
-  }
-
-  .intro-lead {
+.subject-select {
+    padding: 10px 15px;
+    border: 2px solid #2196F3;
+    border-radius: 8px;
     font-size: 1em;
-  }
+    font-weight: bold;
+    outline: none;
 }
 
-.btn-info {
-  background-color: #d0f0f7;       /* 明るい水色系 */
-  color: #004d5a;                  /* 濃い青緑で視認性アップ */
-  font-weight: bold;
-  font-size: 1.1em;
-  padding: 12px 20px;
-  border-radius: 6px;
-  text-decoration: none;
-  display: inline-block;
-  margin-top: 10px;
-  border: 2px solid #00a0b0;       /* 枠線で引き締め */
-  transition: background-color 0.3s, color 0.3s;
+.toolbar-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
 }
 
-.btn-info:hover {
-  background-color: #b8e4ef;
-  color: #003b45;
-}
-
-/* ルビが付いている単語のスタイル */
+/* ▼ ルビ関連 */
 .clickable-ruby {
     cursor: pointer;
     position: relative;
@@ -374,73 +225,47 @@ a:hover {
 
 .clickable-ruby:hover {
     background-color: rgba(33, 150, 243, 0.1);
-    text-decoration: underline;
     color: #1976D2;
 }
 
-/* ★重要: ハイライトしたときにルビ(rt)を選択対象から外す */
 rt {
     user-select: none;
     -webkit-user-select: none;
-    pointer-events: none; /* rt自体はクリックに反応させない */
+    pointer-events: none;
 }
 
-.app-links {
+/* ▼ ログイン画面 */
+.login-container {
   display: flex;
-  flex-direction: column; /* 縦に並べる */
+  justify-content: center;
   align-items: center;
-  gap: 15px; /* ボタン同士の隙間 */
+  min-height: 80vh;
 }
 
-/* ツールバー全体の整理 */
-.toolbar {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    margin-bottom: 30px;
-    display: flex;
-    flex-direction: column; /* 縦に並べる */
-    gap: 15px;
+.login-form {
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 350px;
 }
 
-/* メインのフォーム（科目・形式） */
-.toolbar-form {
-    display: flex;
-    flex-wrap: wrap; /* 折り返し可能に */
-    justify-content: center; /* 中央寄せ */
-    align-items: center;
-    gap: 10px;
+.login-form input[type="text"],
+.login-form input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
-/* 科目セレクトボックスを目立たせる */
-.subject-select {
-    padding: 10px;
-    border: 2px solid #2196F3;
-    border-radius: 6px;
-    font-size: 1.1em;
-    font-weight: bold;
-}
-
-/* ボタン群の整理 */
-.toolbar-links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #ddd; /* 境界線を引く */
-}
-
-/* ボタンの共通デザイン */
-.btn {
-    padding: 8px 15px;
-    border-radius: 20px; /* 丸みを持たせてボタンらしく */
-    font-size: 0.9em;
-    text-decoration: none;
-    transition: opacity 0.2s;
-}
-
-.btn:hover {
-    opacity: 0.8;
+/* ▼ スマホ対応 */
+@media screen and (max-width: 600px) {
+  body { padding: 15px; }
+  .container { padding: 20px; }
+  .intro-title { font-size: 1.6em; }
+  .btn, .app-links a { max-width: 100%; padding: 14px; }
+  .question-text { font-size: 1.1em; }
 }
