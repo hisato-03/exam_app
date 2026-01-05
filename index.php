@@ -1,4 +1,5 @@
 <?php
+// デバッグログ
 file_put_contents('/tmp/debug.log', "✅ index.php reached at " . date('c') . "\n", FILE_APPEND);
 $host = getenv('DB_HOST') ?: 'db';
 $db   = getenv('DB_NAME') ?: 'exam_app';
@@ -11,7 +12,8 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
     file_put_contents('/tmp/debug.log', "✅ DB connected successfully\n", FILE_APPEND);
-    // 初期テーブル（なければ作成）
+    
+    // 初期テーブル作成
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -30,57 +32,65 @@ try {
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>トップページ</title>
+    <title>オンライン介護学習アプリ</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* index.php専用の微調整（必要に応じて） */
-        .app-links .btn {
+        /* index.php専用の大きなボタン用スタイル */
+        .app-links .btn-large {
             display: block;
-            max-width: 400px;
+            max-width: 450px;
             margin: 15px auto;
             text-decoration: none;
-            padding: 15px;
+            padding: 18px;
             font-weight: bold;
-            border-radius: 12px;
+            border-radius: 50px; /* 丸みのある大きなボタン */
             transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 1.1em;
+            color: white !important;
+            border: none;
         }
-        .app-links .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        .app-links .btn-large:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            filter: brightness(1.1);
         }
     </style>
 </head>
 <body>
-  <div class="intro-section" style="max-width: 800px; margin: 40px auto; text-align: center;">
-    <h1 class="intro-title">オンライン介護学習アプリ</h1>
-    <p class="intro-lead">
-      学習する内容を選んでください。<br>
-      下のボタンから目的のアプリを選んでください。
-    </p>
-    <div style="display: inline-block; text-align: left; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: 20px;">
-        <ul class="intro-list" style="margin: 0; padding-left: 20px;">
-          <li>📘 <strong>試験アプリ</strong>：過去問や練習問題を解いて、解説を確認できます。</li>
-          <li>🎥 <strong>動画アプリ</strong>：解説動画を視聴して、理解を深めることができます。</li>
+  <div class="main-layout" style="margin-top: 50px;">
+    
+    <div class="intro-section" style="text-align: center; margin-bottom: 40px;">
+      <h1 class="intro-title" style="font-size: 2.2em; color: #333;">オンライン介護学習アプリ</h1>
+      <p class="intro-lead" style="color: #666; font-size: 1.1em;">
+        学習する内容を選んでください。
+      </p>
+    </div>
+
+    <div class="card-style" style="margin-bottom: 40px; border-top: 5px solid #2196F3;">
+        <ul class="intro-list" style="margin: 0; padding: 10px 10px 10px 25px; line-height: 1.8;">
+          <li>📘 <strong>試験アプリ</strong>：過去問を解いて、詳しい解説を確認できます。</li>
+          <li>🎥 <strong>動画アプリ</strong>：解説動画で、苦手分野の理解を深められます。</li>
         </ul>
     </div>
+
+    <div class="app-links" style="text-align: center;">
+      <a href="/exam_app/test.php" class="btn-large" style="background: #2196F3;">📘 試験問題学習へ</a>
+      
+      <a href="/exam_app/review.php" class="btn-large" style="background: #d32f2f;">🔥 苦手克服モード（復習）</a>
+      
+      <a href="/exam_app/video_app/index.php" class="btn-large" style="background: #4CAF50;">🎥 動画学習へ</a>
+
+      <div style="margin: 40px auto; width: 100px; border-bottom: 2px solid #ddd;"></div>
+
+      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
+        <a href="/exam_app/login.php" class="btn-round" style="background: #6c757d; padding: 12px 30px;">🔐 ログイン / 設定</a>
+        <a href="https://forms.gle/nw84hGPLwEqgCtXu8" target="_blank" class="btn-round" style="background: #9e9e9e; padding: 12px 30px;">📩 お問い合わせ</a>
+      </div>
+    </div>
+
+    <footer style="text-align: center; margin-top: 60px; padding: 20px; color: #999; font-size: 0.9em; border-top: 1px solid #eee;">
+      &copy; <?php echo date('Y'); ?> 介護学習支援プロジェクト
+    </footer>
   </div>
-
-  <div class="app-links center-text">
-    <a href="/exam_app/test.php" class="btn btn-primary">📘 試験問題学習へ</a>
-    
-    <a href="/exam_app/review.php" class="btn" style="background-color: #d32f2f; color: white;">🔥 苦手克服モード（復習）</a>
-    
-    <a href="/exam_app/video_app/index.php" class="btn btn-success">🎥 動画学習へ</a>
-
-    <div style="margin: 30px auto; width: 50px; border-bottom: 2px solid #eee;"></div>
-
-    <a href="/exam_app/login.php" class="btn btn-secondary">🔐 ログイン / アカウント設定</a>
-
-    <a href="https://forms.gle/nw84hGPLwEqgCtXu8" target="_blank" class="btn btn-info" style="background-color: #6c757d; border: none;">📩 フィードバック・お問い合わせ</a>
-  </div>
-
-  <footer style="text-align: center; margin-top: 50px; padding: 20px; color: #888; font-size: 0.9em;">
-    &copy; <?php echo date('Y'); ?> 介護学習支援プロジェクト
-  </footer>
 </body>
 </html>

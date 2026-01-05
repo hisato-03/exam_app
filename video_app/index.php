@@ -33,42 +33,61 @@ $currentSubject = '';
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>学習動画一覧</h1>
 
-  <!-- ▼ ナビゲーションリンク -->
-  <div class="nav-links">
-    <a href="video_history.php">▶ 視聴履歴を見る</a>
-    <a href="../index.php">← トップページへ戻る</a>
+<div class="main-layout">
+  <h1>🎬 学習動画一覧</h1>
+
+  <div class="flex-between" style="justify-content: center; margin-bottom: 30px; gap: 15px;">
+    <a href="video_history.php" class="btn-round" style="background: #4CAF50;">▶ 視聴履歴を見る</a>
+    <a href="../index.php" class="btn-round" style="background: #6c757d;">← トップページへ</a>
   </div>
 
-  <?php
-  if (empty($values)) {
-      echo "<p>動画データが見つかりませんでした。</p>";
-  } else {
-      static $subjectIndex = 0;
-
-      foreach ($values as $row) {
+  <?php if (empty($values)): ?>
+    <div class="card-style">
+      <p style="text-align: center;">動画データが見つかりませんでした。</p>
+    </div>
+  <?php else: ?>
+    <?php
+      $subjectIndex = 0;
+      foreach ($values as $row):
           $row = array_pad($row, 6, '');
           list($subjectCode, $subjectName, $section, $unit, $dummy, $fileName) = $row;
 
-          if ($subjectName && $subjectName !== $currentSubject) {
-              if ($currentSubject !== '') echo "</ul></div>";
+          // 科目が変わったタイミングでカード（subject-block）を作成
+          if ($subjectName && $subjectName !== $currentSubject):
+              if ($currentSubject !== '') echo "</ul></div>"; // 前の科目の閉じタグ
+
               $subjectIndex++;
               $bgClass = 'bg-' . (($subjectIndex % 5) + 1);
-              echo "<div class='subject-block $bgClass'>";
-              echo "<h2>" . htmlspecialchars($subjectName) . "</h2><ul>";
+              ?>
+              <div class="card-style subject-block <?php echo $bgClass; ?>">
+                <h2><?php echo htmlspecialchars($subjectName); ?></h2>
+                <ul class="video-list">
+              <?php
               $currentSubject = $subjectName;
-          }
+          endif;
 
-          if ($fileName && $unit) {
+          // 動画リンクの表示
+          if ($fileName && $unit):
               $path = $subjectCode . "/" . $fileName;
-              echo "<li><a href='player.php?video=" . urlencode($path) . "'>"
-                  . "<span class='unit-label'>" . htmlspecialchars($unit) . "</span>"
-                  . "</a></li>";
-          }
-      }
-      if ($currentSubject !== '') echo "</ul></div>";
-  }
-  ?>
+              ?>
+              <li>
+                <a href="player.php?video=<?php echo urlencode($path); ?>">
+                  <span class="unit-label"><?php echo htmlspecialchars($unit); ?></span>
+                </a>
+              </li>
+              <?php
+          endif;
+      endforeach;
+
+      if ($currentSubject !== '') echo "</ul></div>"; // 最後の閉じタグ
+    ?>
+  <?php endif; ?>
+
+  <footer style="text-align: center; margin-top: 50px; color: #888; font-size: 0.9em;">
+    &copy; <?php echo date('Y'); ?> 介護学習支援プロジェクト
+  </footer>
+</div>
+
 </body>
 </html>

@@ -261,6 +261,15 @@ rt {
   box-sizing: border-box;
 }
 
+.question-card {
+    max-width: 900px; /* ここを統一 */
+    margin: 20px auto;
+    padding: 25px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
 /* ▼ スマホ対応 */
 @media screen and (max-width: 600px) {
   body { padding: 15px; }
@@ -268,4 +277,65 @@ rt {
   .intro-title { font-size: 1.6em; }
   .btn, .app-links a { max-width: 100%; padding: 14px; }
   .question-text { font-size: 1.1em; }
+}
+
+/* 共通コンテナ（幅の統一） */
+.main-layout {
+    max-width: 900px;
+    margin: 20px auto;
+}
+
+/* 共通カードデザイン */
+.card-style {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+/* 丸型ボタン（改行防止・サイズ統一） */
+.btn-round {
+    padding: 6px 15px;
+    border-radius: 20px;
+    text-decoration: none;
+    white-space: nowrap;
+    font-size: 0.9em;
+    display: inline-block;
+    font-weight: bold;
+    color: white !important;
+}
+
+/* ダッシュボード内の配置用 */
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* 辞書用画像スタイル */
+.dictionary-image-container {
+    text-align: center;
+    margin: 20px 0;
+    background: #fdfdfd;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+}
+
+.dictionary-image {
+    max-width: 100%;
+    max-height: 350px; /* 縦長画像で画面が埋まらないように制限 */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    object-fit: contain; /* アスペクト比を維持 */
+}
+
+/* 履歴テーブル内の画像サムネイル用（もし今後使う場合） */
+.history-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
 }

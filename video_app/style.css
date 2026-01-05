@@ -1,195 +1,148 @@
-/* 全体のベーススタイル */
+/* ==========================================
+   全体のベーススタイル（共通ルール）
+   ========================================== */
 body {
   font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-  background-color: #f5f8fc;
+  background-color: #f5f8fc; /* 共通の背景色 */
   margin: 0;
   padding: 0;
   color: #333;
   line-height: 1.6;
 }
 
-/* タイトル */
+/* コンテナ：試験アプリの main-layout と同じ幅に設定 */
+.main-layout {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* タイトルスタイル */
 h1 {
   text-align: center;
   color: #124a86;
-  margin: 40px 0 20px;
-  font-size: 30px;
+  margin: 30px 0;
+  font-size: 28px;
 }
 
-/* ナビゲーションリンク */
-.nav-links {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.nav-links a {
-  margin: 0 12px;
-  text-decoration: none;
-  color: #0066cc;
-  font-weight: bold;
-  font-size: 16px;
-}
-
-.nav-links a:hover {
-  text-decoration: underline;
-}
-
-/* セクションブロック */
-.subject-block {
+/* ==========================================
+   カードスタイル（共通ルール）
+   ========================================== */
+.card-style {
   background: #ffffff;
-  border: 1px solid #d0d7de;
-  border-radius: 8px;
-  margin: 30px auto;
-  padding: 20px 24px;
-  width: 92%;
-  max-width: 860px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border: 1px solid #e0e0e0;
+}
+
+/* 動画アプリ専用のブロック（card-styleを継承） */
+.subject-block {
+  border-top: 5px solid #2196F3; /* 科目ごとに色を変えるアクセント */
 }
 
 .subject-block h2 {
   margin-top: 0;
   font-size: 20px;
   color: #124a86;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 6px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
 }
 
-/* 動画リスト */
-ul {
+/* ==========================================
+   ボタン・リンクスタイル
+   ========================================== */
+/* 丸型ボタン（共通ルール） */
+.btn-round {
+  display: inline-block;
+  padding: 10px 25px;
+  border-radius: 50px;
+  text-decoration: none !important;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  color: white !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  text-align: center;
+}
+
+.btn-round:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* 動画リスト内のリンク */
+.video-list {
   list-style: none;
-  padding-left: 0;
-  margin: 16px 0 0;
+  padding: 0;
+  margin: 0;
 }
 
-li {
-  margin: 10px 0;
+.video-list li {
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
 }
 
-a {
+.video-list li:hover {
+  background-color: #f0f7ff;
+}
+
+.video-list a {
   text-decoration: none;
   color: #0066cc;
   font-weight: 500;
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-a:hover {
-  background-color: #eaf3ff;
-  text-decoration: underline;
-}
-
-/* 単元ラベル */
-.unit-label {
-  font-weight: bold;
-  font-size: 16px;
-}
-
-/* 節ラベル（非表示でもスタイルは残しておく） */
-.section-label {
-  color: #555;
-  font-size: 0.9em;
-  margin-left: 8px;
-}
-
-/* 履歴なしメッセージ */
-.no-history {
-  text-align: center;
-  color: #7a7a7a;
-  margin-top: 30px;
-  font-size: 16px;
-}
-
-/* 戻るリンク */
-.back-link {
-  display: block;
-  text-align: center;
-  margin: 30px auto;
-  font-weight: bold;
-  color: #0066cc;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-.back-link:hover {
-  text-decoration: underline;
-}
-
-/* ボタン風リンク（オプション） */
-.btn {
-  display: inline-block;
-  padding: 10px 20px;
-  margin: 10px 5px;
-  font-size: 16px;
-  border-radius: 6px;
-  text-decoration: none;
-  color: #fff;
-  background-color: #007bff;
-  transition: background-color 0.2s ease;
-}
-
-.btn:hover {
-  background-color: #0056b3;
-}
-
-/* 科目ごとの背景色バリエーション */
-.subject-block.bg-1 {
-  background-color: #fff9e6;
-}
-
-.subject-block.bg-2 {
-  background-color: #e6f7ff;
-}
-
-.subject-block.bg-3 {
-  background-color: #f0f5ff;
-}
-
-.subject-block.bg-4 {
-  background-color: #f9f0ff;
-}
-
-.subject-block.bg-5 {
-  background-color: #e8fce8;
-}
-
-.history-title {
-  text-align: center;
-  font-size: 24px;
-  color: #124a86;
-  margin-top: 30px;
-}
-
-.history-table-container {
   display: flex;
-  justify-content: center;
-  margin-top: 20px;
+  align-items: center;
 }
 
-/* テーブル全体を中央に配置 */
-.history-block {
-  margin: 30px auto;
-  padding: 20px 24px;
-  width: fit-content;
-  max-width: 90%;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  text-align: center; /* テーブル内のテキストも中央に */
+.video-list a::before {
+  content: "▶";
+  margin-right: 10px;
+  font-size: 0.8em;
+  color: #2196F3;
 }
 
-/* テーブルのセルを中央揃え */
+/* ==========================================
+   履歴・テーブル関連
+   ========================================== */
 .history-table {
-  border-collapse: collapse;
   width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
 }
 
-.history-table th,
-.history-table td {
+.history-table th {
+  background: #f8f9fa;
+  padding: 12px;
+  border-bottom: 2px solid #dee2e6;
   text-align: center;
-  padding: 12px 10px;
-  border-bottom: 1px solid #e0e0e0;
-  font-size: 15px;
 }
+
+.history-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+/* レイアウト補助 */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* ==========================================
+   科目別の背景アクセント（オプション）
+   ========================================== */
+.subject-block.bg-1 { border-top-color: #ff9800; }
+.subject-block.bg-2 { border-top-color: #2196f3; }
+.subject-block.bg-3 { border-top-color: #4caf50; }
+.subject-block.bg-4 { border-top-color: #9c27b0; }

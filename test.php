@@ -1,18 +1,17 @@
 <?php
 /**
- * test.php（最新・全科目対応版）
+ * test.php（最新・全科目対応版・スタイル整理済）
  */
 require "auth.php";
 require_once __DIR__ . '/load_credentials.php';
 restore_credentials('GOOGLE_CREDENTIALS_ROOT_B64');
 
-// 1. 基本設定と科目リストの定義（ここを一番上に持ってくる）
+// 1. 基本設定と科目リストの定義
 $subject = $_GET['subject'] ?? '人間の尊厳と自立';
 $mode = $_GET['mode'] ?? 'sequential';
 $selectedYear = $_GET['year'] ?? '';
 
-// ★ここで全科目を定義
-$subjects = ["すべて", "人間の尊厳と自立", "人間関係とコミュニケーション", "社会の理解", "こころとからだ", "発達と老化の理解", "認知症の理解", "障害の理解", "医療的ケア", "介護の基本", "コミュニケーション技術", "生活支援技術", "介護過程", "総合問題"];
+$subjects = ["すべて", "人間の尊厳と自立", "人間関係とコミュニケーション", "社会の理解", "こころとからだ", "発達と老化の理解", "認知症の理解", "障害の理解", "医療性ケア", "介護の基本", "コミュニケーション技術", "生活支援技術", "介護過程", "総合問題"];
 
 require 'vendor/autoload.php';
 use Google\Client;
@@ -27,19 +26,20 @@ echo '</head><body>';
 
 $user = $_SESSION["user"] ?? "guest";
 
-// --- ダッシュボード ---
-echo '<div class="dashboard" style="max-width:900px; margin:20px auto; padding:20px; background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.1); text-align:center;">';
+// --- ダッシュボード（共通クラス適用） ---
+echo '<div class="dashboard main-layout card-style" style="text-align:center;">';
 if ($user === "guest") {
-    echo "<h2>👋 ようこそ、ゲストさん！</h2><a href='login.php' class='btn btn-primary'>ログイン画面へ</a>";
+    // 修正箇所：style="margin: 0 auto;" を追加
+    echo "<h2>👋 ようこそ、ゲストさん！</h2><a href='login.php' class='btn btn-primary' style='margin: 0 auto;'>ログイン画面へ</a>";
 } else {
-    echo "<div style='display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;'>";
-    echo "  <h2 style='margin:0; font-size:1.4em;'>👤 " . htmlspecialchars($user) . " さん、こんにちは！</h2>";
-    echo "  <div style='display:flex; gap:8px;'>";
-    echo '    <a href="history.php" class="btn" style="background:#4CAF50; color:white; padding:6px 15px; border-radius:20px; text-decoration:none;">📊 学習履歴</a>';
-    echo '    <a href="logout.php" class="btn" style="background:#f44336; color:white; padding:6px 15px; border-radius:20px; text-decoration:none;">🚪 ログアウト</a>';
-    echo '    <a href="/exam_app/index.php" class="btn" style="background:#9e9e9e; color:white; padding:6px 15px; border-radius:20px; text-decoration:none;">🏠 閉じる</a>';
-    echo "  </div>";
-    echo "</div>";
+    echo '<div class="flex-between">';
+    echo '  <h2 style="margin:0; font-size:1.4em;">👤 ' . htmlspecialchars($user) . ' さん、こんにちは！</h2>';
+    echo '  <div style="display:flex; gap:8px;">';
+    echo '    <a href="history.php" class="btn-round" style="background:#4CAF50;">📊 学習履歴</a>';
+    echo '    <a href="logout.php" class="btn-round" style="background:#f44336;">🚪 ログアウト</a>';
+    echo '    <a href="/exam_app/index.php" class="btn-round" style="background:#9e9e9e;">🏠 閉じる</a>';
+    echo '  </div>';
+    echo '</div>';
 }
 echo '</div>';
 
@@ -57,7 +57,7 @@ try {
     echo "<script>window.dictMap = " . json_encode($dictMap, JSON_UNESCAPED_UNICODE) . ";</script>";
 } catch (Exception $e) {}
 
-// --- データ取得ロジック（「すべて」対応） ---
+// --- データ取得ロジック ---
 $allValues = [];
 if ($subject === "すべて") {
     foreach ($subjects as $s) {
@@ -81,7 +81,7 @@ if ($subject === "すべて") {
     }
 }
 
-// 試験回リスト抽出（33-77形式）
+// 試験回リスト抽出
 $years = [];
 foreach ($allValues as $row) {
     $rawExamNum = $row[9] ?? '';
@@ -106,8 +106,8 @@ foreach ($allValues as $row) {
 }
 if ($mode === 'random') shuffle($filteredValues);
 
-// --- ツールバー（ここで $subjects を使ってドロップダウン作成） ---
-echo '<div class="toolbar" style="max-width:900px; margin:0 auto 30px; background:#f8f9fa; padding:15px; border-radius:10px; border:1px solid #eee;">';
+// --- ツールバー（共通クラス適用） ---
+echo '<div class="toolbar main-layout card-style" style="border:1px solid #eee;">';
 echo '  <form method="GET" id="filterForm" class="no-ruby" style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:center;">';
 echo '    <input type="hidden" name="page" value="1">';
 echo '    <label>📚 科目: <select name="subject" class="no-ruby" style="padding:8px; border-radius:5px; border:2px solid #2196F3;">';
@@ -132,7 +132,7 @@ echo '    <button type="button" id="toggleRubyBtn" class="no-ruby" style="paddin
 echo '  </form>';
 echo '</div>';
 
-// --- 問題表示エリア（以下、前回のコードと同じ） ---
+// --- 問題表示エリア ---
 $perPage = 5;
 $page = max(1, intval($_GET['page'] ?? 1));
 $total = count($filteredValues);
@@ -142,23 +142,25 @@ $end = min($start + $perPage, $total);
 if ($total === 0) {
     echo "<p style='text-align:center;'>指定された条件の問題は見つかりませんでした。</p>";
 } else {
-    echo "<div style='text-align:center; margin-bottom:10px;'>{$subject} " . ($selectedYear ? "第{$selectedYear}回 " : "") . "（全 {$total} 問）</div>";
+    echo "<div class='main-layout' style='text-align:center; margin-bottom:10px;'>{$subject} " . ($selectedYear ? "第{$selectedYear}回 " : "") . "（全 {$total} 問）</div>";
     for ($index = $start; $index < $end; $index++) {
         $row = array_pad($filteredValues[$index], 13, '');
-        echo "<div class='question-card' style='max-width:800px; margin:20px auto; padding:25px; background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>";
+        // 共通クラス適用
+        echo "<div class='question-card main-layout card-style'>";
         echo "<form class='qa-form' action='save_history.php' method='post'>";
-        // J列の「36-77」を「第36回 問77」に変換
+        
         $rawExamNum = $row[9] ?? '';
-        $displayExamNum = "問題"; // デフォルト
+        $displayExamNum = "問題";
         if (!empty($rawExamNum) && strpos($rawExamNum, '-') !== false) {
-        $parts = explode('-', $rawExamNum);
-        $displayExamNum = "第" . $parts[0] . "回 問" . $parts[1];
-}
+            $parts = explode('-', $rawExamNum);
+            $displayExamNum = "第" . $parts[0] . "回 問" . $parts[1];
+        }
 
         echo "<div class='question-text content-ruby' style='margin-bottom:20px; font-size:1.1em;'>";
         echo "<span style='background:#e3f2fd; color:#1976d2; padding:2px 8px; border-radius:4px; font-size:0.9em; margin-right:8px;'>{$displayExamNum}</span>";
-        echo "<strong></strong> " . htmlspecialchars($row[1]);
+        echo htmlspecialchars($row[1]);
         echo "</div>";
+
         if (!empty(trim($row[12]))) {
             echo "<div style='text-align:center; margin-bottom:20px;'><img src='images/".htmlspecialchars(trim($row[12]), ENT_QUOTES)."' style='max-width:100%; max-height:300px; border-radius:8px;'></div>";
         }
@@ -181,10 +183,10 @@ if ($total === 0) {
     }
 
     // ページナビ
-    echo "<div style='text-align:center; margin:40px 0;'>";
+    echo "<div class='main-layout' style='text-align:center; margin:40px 0;'>";
     $baseUrl = "test.php?subject=".urlencode($subject)."&mode=".urlencode($mode)."&year=".urlencode($selectedYear);
-    if ($page > 1) echo "<a href='{$baseUrl}&page=".($page-1)."' style='margin-right:15px; text-decoration:none; padding:12px 25px; background:#ffffff; border:2px solid #2196F3; border-radius:30px; color:#2196F3 !important; font-weight:bold; display:inline-block;'>◀ 前の5問</a>";
-    if ($end < $total) echo "<a href='{$baseUrl}&page=".($page+1)."' style='text-decoration:none; padding:12px 25px; background:#2196F3; border:2px solid #2196F3; border-radius:30px; color:#ffffff !important; font-weight:bold; display:inline-block;'>次の5問 ▶</a>";
+    if ($page > 1) echo "<a href='{$baseUrl}&page=".($page-1)."' class='btn-round' style='background:#ffffff; border:2px solid #2196F3; color:#2196F3 !important; padding:12px 25px;'>◀ 前の5問</a>";
+    if ($end < $total) echo "<a href='{$baseUrl}&page=".($page+1)."' class='btn-round' style='background:#2196F3; padding:12px 25px;'>次の5問 ▶</a>";
     echo "</div>";
 }
 ?>

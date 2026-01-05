@@ -1,22 +1,7 @@
 <?php
-require('../auth.php'); // ログインチェック
+require_once('../auth.php'); // ログインチェック
 
-$userId = $_SESSION["user_id"] ?? 0;
-
-try {
-    $pdo = new PDO("mysql:host=db;dbname=exam_app;charset=utf8mb4", "exam_user", "exam_pass");
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    // ▼ 動画履歴取得（ユーザーごと）
-    $stmt = $pdo->prepare("SELECT * FROM video_history WHERE user_id=? ORDER BY watched_at DESC");
-    $stmt->execute([$userId]);
-    $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-} catch (PDOException $e) {
-    die("DBエラー: " . htmlspecialchars($e->getMessage()));
-}
-
-// ▼ Google Sheets から単元・科目名情報を取得
+// Google Sheets API 読み込み（マスターデータ取得用）
 require __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../load_credentials.php';
 restore_credentials('GOOGLE_CREDENTIALS_VIDEO_B64');
@@ -24,79 +9,111 @@ restore_credentials('GOOGLE_CREDENTIALS_VIDEO_B64');
 use Google\Client;
 use Google\Service\Sheets;
 
-$client = new Client();
-$client->setApplicationName('VideoApp');
-$client->setScopes([Sheets::SPREADSHEETS_READONLY]);
-$client->setAuthConfig(__DIR__ . '/credentials.json');
-$client->setAccessType('offline');
+$userId = $_SESSION["user_id"] ?? 0;
 
-$service = new Sheets($client);
+try {
+    $pdo = new PDO("mysql:host=db;dbname=exam_app;charset=utf8mb4", "exam_user", "exam_pass");
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-$spreadsheetId = '1evXOkxn2Pjpv9vXr95jMknI8UGK3IxXP1FbvWSeQIKY';
-$range = '管理表!A3:F100';
-$response = $service->spreadsheets_values->get($spreadsheetId, $range);
-$sheetValues = $response->getValues();
+    // 1. 視聴履歴を取得
+    $stmt = $pdo->prepare("SELECT subject, video_title, watched_at FROM video_history WHERE user_id = ? ORDER BY watched_at DESC");
+    $stmt->execute([$userId]);
+    $history = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ▼ 動画パス → [科目名, 単元] のマッピングを作成
-$videoInfoMap = [];
-foreach ($sheetValues as $row) {
-    $row = array_pad($row, 6, '');
-    $subjectCode = trim($row[0]); // A列
-    $subjectName = trim($row[1]); // B列（← 科目名）
-    $unit = trim($row[3]);        // D列
-    $fileName = trim($row[5]);    // F列
+    // 2. スプレッドシートから科目名と単元名のマスターデータを取得
+    $client = new Client();
+    $client->setAuthConfig(__DIR__ . '/credentials.json');
+    $client->setScopes([Sheets::SPREADSHEETS_READONLY]);
+    $service = new Sheets($client);
+    $spreadsheetId = '1evXOkxn2Pjpv9vXr95jMknI8UGK3IxXP1FbvWSeQIKY';
+    $range = '管理表!A3:F100'; 
+    $response = $service->spreadsheets_values->get($spreadsheetId, $range);
+    $values = $response->getValues();
 
-    if ($subjectCode && $fileName) {
-        $fullPath = $subjectCode . '/' . $fileName;
-        $videoInfoMap[$fullPath] = [
-            'subject' => $subjectName ?: '（不明）',
-            'unit' => $unit ?: '（不明）'
-        ];
+    // 3. 変換用マップを作成 [ファイル名 => ['subject' => 科目名, 'unit' => 単元名]]
+    $videoMaster = [];
+    if (!empty($values)) {
+        foreach ($values as $row) {
+            $row = array_pad($row, 6, '');
+            // A:コード, B:科目名, C:節, D:単元名, F:ファイル名
+            $sName = $row[1];
+            $uName = $row[3];
+            $fName = $row[5];
+            if ($fName) {
+                $videoMaster[$fName] = ['subject' => $sName, 'unit' => $uName];
+            }
+        }
     }
+
+} catch (Exception $e) {
+    die("エラー: " . htmlspecialchars($e->getMessage()));
 }
 ?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>動画履歴</title>
+  <title>視聴履歴</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="video-history-page">
-  <h1 class="history-title">視聴履歴</h1>
+<body>
 
-  <?php if (!empty($records)): ?>
-    <div class="history-block">
-      <table class="history-table">
-        <tr>
-          <th>ID</th>
-          <th>科目名</th>
-          <th>単元</th>
-          <th>日時</th>
-        </tr>
-        <?php foreach ($records as $row): ?>
-          <?php
-            $path = $row["video_path"];
-            $info = $videoInfoMap[$path] ?? ['subject' => '（不明）', 'unit' => '（不明）'];
-          ?>
-          <tr>
-            <td><?php echo htmlspecialchars($row["id"]); ?></td>
-            <td><?php echo htmlspecialchars($info['subject']); ?></td>
-            <td>
-              <a href="player.php?video=<?php echo urlencode($path); ?>" class="video-link">
-                <?php echo htmlspecialchars($info['unit']); ?>
-              </a>
-            </td>
-            <td><?php echo htmlspecialchars($row["watched_at"] ?? ''); ?></td>
-          </tr>
-        <?php endforeach; ?>
-      </table>
-    </div>
-  <?php else: ?>
-    <p class="no-history">まだ動画履歴はありません。</p>
-  <?php endif; ?>
+<div class="main-layout container">
+  <h1 style="text-align: center; margin-bottom: 10px;">🎬 動画視聴履歴</h1>
 
-  <!-- ▼ 戻るリンク -->
-  <a href="index.php" class="back-link">← 動画一覧へ戻る</a>
+  <div style="text-align: center; margin-bottom: 30px;">
+    <a href="index.php" class="btn-round" style="background: #2196F3; padding: 10px 40px;">▶ 動画一覧へ戻る</a>
+  </div>
+
+  <div class="card-style">
+    <?php if (empty($history)): ?>
+      <p style="text-align: center; padding: 30px; color: #888;">まだ視聴履歴はありません。</p>
+    <?php else: ?>
+      <div style="overflow-x: auto;">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th style="width: 25%; white-space:nowrap;">科目</th>
+              <th>動画タイトル（単元）</th>
+              <th style="width: 25%; white-space:nowrap;">視聴日時</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($history as $row): 
+                // マスターデータから名称を検索、なければDBの値をそのまま使う
+                $fName = $row['video_title'];
+                $displaySubject = $videoMaster[$fName]['subject'] ?? $row['subject'];
+                $displayUnit    = $videoMaster[$fName]['unit'] ?? $fName;
+            ?>
+              <tr>
+                <td style="vertical-align: top;">
+                  <span style="background: #eef2f7; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold; color: #124a86;">
+                    <?php echo htmlspecialchars($displaySubject); ?>
+                  </span>
+                </td>
+                <td style="text-align: left; font-weight: bold;">
+                  <?php echo htmlspecialchars($displayUnit); ?>
+                </td>
+                <td style="font-size: 0.85em; color: #888; white-space:nowrap; vertical-align: top;">
+                  <?php echo htmlspecialchars($row['watched_at']); ?>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </div>
+
+  <div style="text-align: center; margin-top: 40px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+    <a href="../index.php" class="btn-round" style="background: #6c757d; padding: 12px 30px;">🏠 トップページへ</a>
+    <a href="../history.php" class="btn-round" style="background: #4CAF50; padding: 12px 30px;">📊 学習履歴を見る</a>
+  </div>
+
+  <footer style="text-align: center; margin-top: 50px; color: #888; font-size: 0.9em;">
+    &copy; <?php echo date('Y'); ?> 介護学習支援プロジェクト
+  </footer>
+</div>
+
 </body>
 </html>
