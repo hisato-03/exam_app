@@ -19,8 +19,17 @@ use Google\Service\Sheets;
 
 echo '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>試験ページ</title>';
 echo '<link rel="stylesheet" href="style.css">';
+echo '<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>';
+echo '</head><body>'; // bodyを開始してから辞書を読み込む
+
 $metaPath = __DIR__ . "/ruby_meta_tags.html";
-echo file_exists($metaPath) ? file_get_contents($metaPath) : "";
+if (file_exists($metaPath)) {
+    echo '<div id="ruby-dict-container" style="display:none;">';
+    echo file_get_contents($metaPath);
+    echo '</div>';
+}
+// --------------------------------------------------------
+
 echo '<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>';
 echo '</head><body>';
 
@@ -49,12 +58,28 @@ $client->setAuthConfig(__DIR__ . '/credentials.json');
 $client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
 $service = new Google\Service\Sheets($client);
 
-// 辞書取得
+// --- test.php の辞書取得部分 ---
 try {
-    $dictResponse = $service->spreadsheets_values->get('1LDr4Acf_4SE-Wzp-ypPxM6COZdOt2QYumak8hIVVdxo', 'dictionary_upload!A2:B');
+    $dictResponse = $service->spreadsheets_values->get('1LDr4Acf_4SE-Wzp-ypPxM6COZdOt2QYumak8hIVVdxo', 'dictionary_upload!A2:C');
     $dictValues = $dictResponse->getValues() ?? [];
-    $dictMap = []; foreach ($dictValues as $row) { if (!empty($row[0])) $dictMap[$row[0]] = $row[1] ?? ''; }
-    echo "<script>window.dictMap = " . json_encode($dictMap, JSON_UNESCAPED_UNICODE) . ";</script>";
+    
+    $dictMap = [];    // A列(単語) => B列(ふりがな) ※自動ルビ用
+    $meaningMap = []; // A列(単語) => C列(意味)   ※クリック判定用
+
+    foreach ($dictValues as $row) { 
+        $word = $row[0] ?? '';
+        if (!empty($word)) {
+            $dictMap[$word] = $row[1] ?? ''; 
+            // C列に意味がある場合のみ、クリック対象とする
+            if (!empty($row[2])) {
+                $meaningMap[$word] = true; 
+            }
+        } 
+    }
+    echo "<script>";
+    echo "window.dictMap = " . json_encode($dictMap, JSON_UNESCAPED_UNICODE) . ";";
+    echo "window.meaningMap = " . json_encode($meaningMap, JSON_UNESCAPED_UNICODE) . ";";
+    echo "</script>";
 } catch (Exception $e) {}
 
 // --- データ取得ロジック ---
@@ -189,48 +214,90 @@ if ($total === 0) {
     if ($end < $total) echo "<a href='{$baseUrl}&page=".($page+1)."' class='btn-round' style='background:#2196F3; padding:12px 25px;'>次の5問 ▶</a>";
     echo "</div>";
 }
-?>
 
-<script src="script.js"></script>
+?>
+<script src="script.js?v=<?php echo time(); ?>"></script>
+
 <script>
 $(function() {
+    // 1. ページ読み込み完了時のルビ適用
     $(window).on('load', function() {
-        if (typeof window.applyRuby === "function") {
-            setTimeout(function() {
-                window.applyRuby($('.content-ruby'));
-                window.applyRubyVisibility($('.content-ruby'));
-            }, 100);
+    console.log("Window loaded. Applying ruby...");
+    if (typeof window.applyRuby === "function") {
+        setTimeout(function() {
+            // 実行前に辞書があるかチェック
+            console.log("Dictionary Check:", window.dictMap); 
+            
+            $('.content-ruby').each(function() {
+                window.applyRuby(this); 
+            });
+            window.applyRubyVisibility('.content-ruby');
+        }, 800); // 余裕を持って800ミリ秒待つ
         }
     });
 
+    // 2. 回答送信（Ajax）処理
     $('.qa-form').on('submit', function(e) {
         e.preventDefault();
         const $form = $(this);
         const $resultDiv = $form.find('.answer');
-        const $submitBtn = $form.find('.btn-answer');
         const $explanation = $form.find('.explanation');
+        const $submitBtn = $form.find('.btn-answer');
+
         $submitBtn.prop('disabled', true).text('送信中...');
-        $.ajax({ url: 'save_history.php', type: 'POST', data: $form.serialize(), dataType: 'json' })
+
+        $.ajax({
+            url: 'save_history.php',
+            type: 'POST',
+            data: $form.serialize(),
+            dataType: 'json'
+        })
         .done(function(data) {
-            let html = data.is_correct ? '<div style="color:#d9534f; font-weight:bold; font-size:1.3em; margin:15px 0;">⭕ 正解です！</div>' : '<div style="color:#337ab7; font-weight:bold; font-size:1.3em; margin:15px 0;">❌ 正解は [' + data.correct + '] です。</div>';
+            let html = data.is_correct 
+                ? '<div style="color:#d9534f; font-weight:bold; font-size:1.3em; margin:15px 0;">⭕ 正解です！</div>' 
+                : '<div style="color:#337ab7; font-weight:bold; font-size:1.3em; margin:15px 0;">❌ 正解は [' + data.correct + '] です。</div>';
+            
             $resultDiv.html(html);
+
             if (typeof window.applyRuby === "function") {
-                window.applyRuby($resultDiv); window.applyRuby($explanation);
-                window.applyRubyVisibility($resultDiv); window.applyRubyVisibility($explanation);
+                window.applyRuby($resultDiv[0]);
+                window.applyRuby($explanation[0]);
+                window.applyRubyVisibility('.content-ruby');
             }
             $explanation.slideDown();
             $submitBtn.text('回答済み').css({'background':'#ccc','cursor':'default'});
         });
     });
 
+    // 3. マウスアップ時の辞書判定（ポップアップ）
     $(document).on("mouseup", function(e) {
         const sel = window.getSelection().toString().trim();
-        if (sel.length > 0) {
+        if (sel.length > 0 && window.dictMap && window.dictMap[sel]) {
             $("#dictPopup").remove();
-            $('<div id="dictPopup">辞書で調べる</div>').css({position:"absolute", left:e.pageX+10, top:e.pageY+10, padding:"10px 20px", background:"#2196F3", color:"#fff", borderRadius:"6px", cursor:"pointer", zIndex:9999})
-            .appendTo("body").on("click", function() { location.href = "dictionary.php?word="+encodeURIComponent(sel)+"&subject="+encodeURIComponent("<?php echo $subject; ?>"); });
-        } else { if (!$(e.target).closest("#dictPopup").length) $("#dictPopup").remove(); }
+            $('<div id="dictPopup">📖 「' + sel + '」の意味を調べる</div>').css({
+                position: "absolute", 
+                left: e.pageX + 10, 
+                top: e.pageY + 10, 
+                padding: "10px 20px", 
+                background: "#2196F3", 
+                color: "#fff", 
+                borderRadius: "6px", 
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                cursor: "pointer", 
+                zIndex: 9999,
+                fontWeight: "bold"
+            })
+            .appendTo("body")
+            .on("click", function() { 
+                location.href = "dictionary.php?word=" + encodeURIComponent(sel) + "&subject=" + encodeURIComponent("<?php echo $subject; ?>"); 
+            });
+        } else { 
+            if (!$(e.target).closest("#dictPopup").length) {
+                $("#dictPopup").remove(); 
+            }
+        }
     });
 });
 </script>
-</body></html>
+</body>
+</html>

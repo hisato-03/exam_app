@@ -1,10 +1,17 @@
-/* ▼ 全体レイアウト */
+/* =========================================
+   1. 基本レイアウト・コンテナ
+   ========================================= */
 body {
   font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
   background-color: #f5f5f5;
   padding: 30px;
   color: #222;
   line-height: 1.6;
+}
+
+.main-layout {
+    max-width: 900px;
+    margin: 20px auto;
 }
 
 .container {
@@ -16,49 +23,16 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* ▼ 導入セクション */
-.intro-section {
-  max-width: 700px;
-  margin: 0 auto 30px auto;
-  padding: 20px;
-  text-align: center;
+.card-style {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
 }
 
-.intro-title {
-  font-size: 2.2em;
-  margin-bottom: 16px;
-  color: #1a1a1a;
-  font-weight: 800;
-}
-
-.intro-lead {
-  font-size: 1.15em;
-  color: #444;
-  margin-bottom: 20px;
-}
-
-.intro-list {
-  list-style-type: none;
-  padding-left: 0;
-  display: inline-block;
-  text-align: left;
-}
-
-.intro-list li {
-  margin: 10px 0;
-  padding-left: 5px;
-}
-
-/* ▼ ボタン・リンクラッパー (index.php用) */
-.app-links {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  margin-top: 30px;
-}
-
-/* 共通ボタン・リンクスタイル */
+/* =========================================
+   2. 共通コンポーネント（ボタン・リンク）
+   ========================================= */
 .btn, .app-links a {
   display: block;
   width: 100%;
@@ -81,24 +55,29 @@ body {
   opacity: 0.95;
 }
 
-/* ボタンカラーバリエーション */
-.btn-primary { background-color: #007bff; color: #fff; }
-.btn-success { background-color: #28a745; color: #fff; }
+.btn-primary   { background-color: #007bff; color: #fff; }
+.btn-success   { background-color: #28a745; color: #fff; }
 .btn-secondary { background-color: #6c757d; color: #fff; }
-.btn-info { background-color: #17a2b8; color: #fff; }
+.btn-info      { background-color: #17a2b8; color: #fff; }
 
-/* センターテキストクラス */
-.center-text {
-  text-align: center;
+.btn-round {
+    padding: 6px 15px;
+    border-radius: 20px;
+    text-decoration: none;
+    white-space: nowrap;
+    font-size: 0.9em;
+    display: inline-block;
+    font-weight: bold;
+    color: white !important;
 }
 
-/* ▼ 問題カード */
+/* =========================================
+   3. 試験ページ（問題表示エリア）
+   ========================================= */
 .question-card {
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  padding: 20px;
-  margin-bottom: 30px;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 25px;
 }
 
 .question-text {
@@ -108,9 +87,10 @@ body {
   color: #111;
   border-left: 4px solid #2196f3;
   padding-left: 15px;
+  /* ルビを考慮した行間 */
+  line-height: 2.2; 
 }
 
-/* ▼ 選択肢 */
 .choices {
   list-style-type: none;
   padding-left: 0;
@@ -123,219 +103,88 @@ body {
   background-color: #f0f7ff;
   border: 1px solid #d0e3f5;
   border-radius: 8px;
-  color: #222;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.choices li:hover {
-  background-color: #e1f0ff;
-  border-color: #2196f3;
-  transform: scale(1.01);
-}
-
-/* ▼ 解答・解説 */
-.answer {
-  font-weight: bold;
-  color: #d32f2f;
-  margin-bottom: 10px;
-  text-align: center;
-  font-size: 1.2em;
+  line-height: 2.2; /* 選択肢もルビ用に広げる */
 }
 
 .explanation {
-  font-size: 0.95em;
-  color: #444;
   background-color: #fff9c4;
   padding: 15px;
   border-radius: 8px;
   margin-top: 10px;
+  line-height: 2.2;
 }
 
-/* ▼ テーブル */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  overflow: hidden;
+/* =========================================
+   4.最終版：ルビ表示の安定化 CSS
+   ========================================= */
+
+/* ルビ全体：ブラウザの標準機能を活かしつつ、行の崩れを防ぐ */
+ruby {
+    ruby-position: over;
+    ruby-align: center;
+    /* 万が一の横ズレ防止 */
+    white-space: nowrap; 
 }
 
-th, td {
-  border: 1px solid #eee;
-  padding: 12px;
-  text-align: center;
+/* 親文字部分：script.jsが生成する <rb> に対応 */
+rb {
+    /* ruby-base-align は古いプロパティなので削除 */
+    display: inline; /* ブラウザ標準の挙動に任せる */
 }
 
-th {
-  background: #2196f3;
-  color: #fff;
-  font-weight: bold;
+/* ふりがな部分：サイズと色の調整 */
+rt {
+    font-size: 0.6em;
+    color: #666;
+    line-height: 1.2;
+    /* 確実に上に配置 */
+    display: ruby-text; 
 }
 
-tr:nth-child(even) {
-  background-color: #f9f9f9;
+/* クリック可能なルビの視認性向上 */
+.clickable-ruby {
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.2s;
 }
 
-/* ▼ ツールバー (test.php用) */
+.clickable-ruby.has-meaning:hover {
+    background-color: rgba(33, 150, 243, 0.1);
+}
+
+/* 重要：ルビが表示されても行が重ならないよう、高さを確保 */
+.content-ruby, .ruby-target, .question-text, .choices li {
+    line-height: 2.8 !important; /* ルビがある場合は 2.5〜3.0 が理想です */
+}
+
+/* 3. クリック可能なルビの最低限の装飾 */
+.clickable-ruby {
+    cursor: pointer;
+}
+.clickable-ruby:hover {
+    background-color: rgba(33, 150, 243, 0.1);
+}
+/* =========================================
+   5. その他パーツ（ツールバー・画像・スマホ）
+   ========================================= */
 .toolbar {
     background: #f8f9fa;
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     margin-bottom: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.toolbar-form {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-}
-
-.subject-select {
-    padding: 10px 15px;
-    border: 2px solid #2196F3;
-    border-radius: 8px;
-    font-size: 1em;
-    font-weight: bold;
-    outline: none;
-}
-
-.toolbar-links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-}
-
-/* ▼ ルビ関連 */
-.clickable-ruby {
-    cursor: pointer;
-    position: relative;
-    padding: 0 1px;
-    border-radius: 2px;
-}
-
-.clickable-ruby:hover {
-    background-color: rgba(33, 150, 243, 0.1);
-    color: #1976D2;
-}
-
-rt {
-    user-select: none;
-    -webkit-user-select: none;
-    pointer-events: none;
-}
-
-/* ▼ ログイン画面 */
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 80vh;
-}
-
-.login-form {
-  background-color: #fff;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 350px;
-}
-
-.login-form input[type="text"],
-.login-form input[type="password"] {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-
-.question-card {
-    max-width: 900px; /* ここを統一 */
-    margin: 20px auto;
-    padding: 25px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-/* ▼ スマホ対応 */
-@media screen and (max-width: 600px) {
-  body { padding: 15px; }
-  .container { padding: 20px; }
-  .intro-title { font-size: 1.6em; }
-  .btn, .app-links a { max-width: 100%; padding: 14px; }
-  .question-text { font-size: 1.1em; }
-}
-
-/* 共通コンテナ（幅の統一） */
-.main-layout {
-    max-width: 900px;
-    margin: 20px auto;
-}
-
-/* 共通カードデザイン */
-.card-style {
-    background: #fff;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-}
-
-/* 丸型ボタン（改行防止・サイズ統一） */
-.btn-round {
-    padding: 6px 15px;
-    border-radius: 20px;
-    text-decoration: none;
-    white-space: nowrap;
-    font-size: 0.9em;
-    display: inline-block;
-    font-weight: bold;
-    color: white !important;
-}
-
-/* ダッシュボード内の配置用 */
-.flex-between {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-/* 辞書用画像スタイル */
-.dictionary-image-container {
-    text-align: center;
-    margin: 20px 0;
-    background: #fdfdfd;
-    padding: 10px;
-    border: 1px solid #eee;
-    border-radius: 12px;
 }
 
 .dictionary-image {
     max-width: 100%;
-    max-height: 350px; /* 縦長画像で画面が埋まらないように制限 */
+    max-height: 350px;
     border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    object-fit: contain; /* アスペクト比を維持 */
+    object-fit: contain;
 }
 
-/* 履歴テーブル内の画像サムネイル用（もし今後使う場合） */
-.history-thumb {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 4px;
+@media screen and (max-width: 600px) {
+  body { padding: 15px; }
+  .intro-title { font-size: 1.6em; }
+  .btn, .app-links a { max-width: 100%; }
+  /* スマホでは特に行間に注意 */
+  .question-text, .choices li { line-height: 2.4; }
 }
