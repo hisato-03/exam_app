@@ -158,13 +158,46 @@ rt {
     line-height: 2.8 !important; /* ルビがある場合は 2.5〜3.0 が理想です */
 }
 
-/* 3. クリック可能なルビの最低限の装飾 */
+/* クリック可能なルビの最低限の装飾 */
 .clickable-ruby {
     cursor: pointer;
 }
 .clickable-ruby:hover {
     background-color: rgba(33, 150, 243, 0.1);
 }
+
+/* ✅ 修正後：has-meaning クラスを持っている時だけポインタと背景色を変える */
+.clickable-ruby.has-meaning {
+    cursor: pointer !important;
+}
+
+.clickable-ruby.has-meaning:hover {
+    background-color: #70a8d1 !important; /* 青 */
+    border-radius: 3px;
+}
+
+/* 意味がない単語（has-meaningがない場合）は、指マークも背景変化も無効化する */
+.clickable-ruby:not(.has-meaning) {
+    cursor: default !important;
+    pointer-events: none; /* クリック自体を無効化したい場合はこれ */
+}
+.clickable-ruby:not(.has-meaning):hover {
+    background-color: transparent !important;
+}
+
+/* ルビが振られた要素の中にあるルビを重ねないための保険 */
+ruby ruby {
+    display: inline;
+}
+ruby ruby rt {
+    display: none; /* もし二重になっても、内側のルビは隠す */
+}
+
+/* no-ruby クラスの中ではJSによる動的ルビ生成を無効化する視覚的保証 */
+.no-ruby rt {
+    display: ruby-text !important; /* PHPが振ったルビは強制表示 */
+}
+
 /* =========================================
    5. その他パーツ（ツールバー・画像・スマホ）
    ========================================= */

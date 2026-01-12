@@ -90,6 +90,15 @@ try {
     }
 } catch (Exception $e) { /* APIエラー時 */ }
 
+// --- 追加：PHP側でスマート・ルビを生成する関数 ---
+function formatSmartRuby($word, $ruby) {
+    if (empty($ruby) || $word === $ruby) {
+        return htmlspecialchars($word);
+    }
+    // 単語全体をrubyタグで囲む（二重表示を防ぐため、単純なテキスト表示を置き換える）
+    return "<ruby>" . htmlspecialchars($word) . "<rt>" . htmlspecialchars($ruby) . "</rt></ruby>";
+}
+
 // ▼ 翻訳実行
 $translations = [
     'en' => translateText($word, 'en'),
@@ -106,6 +115,7 @@ if (!empty($word) && !empty($meaning) && $userId > 0) {
         $stmt->execute([$userId, $word, $meaning, $subject]);
     } catch (PDOException $e) { }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -113,9 +123,14 @@ if (!empty($word) && !empty($meaning) && $userId > 0) {
     <meta charset="UTF-8">
     <title>辞書検索</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ルビの重なりや二重表示を防ぐためのスタイル */
+        ruby { ruby-align: start; }
+        rt { font-size: 0.6em; color: #666; font-weight: normal; }
+        .content-ruby { line-height: 2.0; } /* ルビが入るため行間を広げる */
+    </style>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
-        // 全辞書データをJavaScriptに渡す
         window.dictMap = <?php echo json_encode($allDictData, JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <script src="script.js"></script>
@@ -133,9 +148,9 @@ if (!empty($word) && !empty($meaning) && $userId > 0) {
     </div>
 
     <div class="card-style" style="margin-bottom:25px; border-left: 5px solid #2196F3;">
-        <div style="font-size:1.4em; margin-bottom:15px;">
-            <strong>単語:</strong> <span class="content-ruby"><?php echo htmlspecialchars($word); ?></span>
-        </div>
+    <div style="font-size:1.4em; margin-bottom:15px;">
+        <strong>単語:</strong> <span class="no-ruby"><?php echo formatSmartRuby($word, $ruby); ?></span>
+    </div>
 
         <?php if (!empty($imageUrl)): ?>
             <div class="dictionary-image-container" style="text-align:center; margin-bottom:20px;">
@@ -146,26 +161,9 @@ if (!empty($word) && !empty($meaning) && $userId > 0) {
 
         <div class="ruby-target">
             <strong>意味:</strong> 
-            <div class="content-ruby" style="margin-top:10px; padding:15px; background:#f8f9fa; border-radius:8px; line-height:1.6;">
+            <div class="content-ruby" style="margin-top:10px; padding:15px; background:#f8f9fa; border-radius:8px; line-height:1.8;">
                 <?php echo !empty($meaning) ? htmlspecialchars($meaning) : '辞書に登録されていません'; ?>
             </div>
-        </div>
-    </div>
-
-    <div class="card-style" style="margin-bottom:30px;">
-        <div style="margin-bottom:15px; display:flex; align-items:center; gap:10px;">
-            <label for="lang-select"><strong>🌎 翻訳言語:</strong></label>
-            <select id="lang-select" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
-                <option value="en">English</option>
-                <option value="tl">Tagalog</option>
-                <option value="my">Myanmar</option>
-                <option value="th">Thai</option>
-            </select>
-        </div>
-        
-        <div id="translation-result" style="padding:15px; background:#e8f5e9; border-radius:8px; min-height:60px;">
-            <div class="word"><strong>English:</strong></div>
-            <div class="meaning" style="font-size:1.1em; margin-top:5px;"><?php echo htmlspecialchars($translations['en']); ?></div>
         </div>
     </div>
 
@@ -180,12 +178,10 @@ $(function() {
     if (window.opener) { $("#backLink").hide(); }
     const translations = <?php echo $translationsJson; ?>;
 
-    // ルビ振り処理の実行
+    // script.js の関数を呼び出し
     if (typeof window.applyRuby === "function") {
+        // ページ全体ではなく、".content-ruby"（意味のエリア）の中だけルビを振る
         window.applyRuby('.content-ruby');
-        // ルビの表示・非表示状態を反映
-        if (typeof window.applyRubyVisibility === "function") {
-            window.applyRubyVisibility('.content-ruby');
         }
     }
 

@@ -112,6 +112,22 @@ if ($subject === "すべて") {
         } catch (Exception $e) { $allValues = []; }
     }
 }
+// ★★★ ここに追加：試験回リストの抽出 ★★★
+$years = [];
+if (!empty($allValues)) {
+    foreach ($allValues as $row) {
+        $rawExamNum = $row[9] ?? ''; // 10列目(J列)
+        if ($rawExamNum !== '' && strpos($rawExamNum, '-') !== false) {
+            $parts = explode('-', $rawExamNum);
+            $yearOnly = trim($parts[0]);
+            if ($yearOnly !== '' && !in_array($yearOnly, $years)) {
+                $years[] = $yearOnly;
+            }
+        }
+    }
+    // 数値として並び替え（第31回、第32回...と並ぶように）
+    sort($years, SORT_NUMERIC);
+}
 
 // --- 1. すべてのフィルタリングを一度に行う ---
 $tempFiltered = [];
