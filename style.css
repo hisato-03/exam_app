@@ -188,3 +188,367 @@ rt {
   /* スマホでは特に行間に注意 */
   .question-text, .choices li { line-height: 2.4; }
 }
+
+/* --- 学習履歴テーブルの改善 --- */
+
+/* テーブル全体のスタイル */
+table {
+    width: 100%;
+    border-collapse: collapse; /* 境界線を1本にまとめる */
+    margin: 20px 0;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden; /* 角丸を適用するため */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* ヘッダー（見出し）部分 */
+table th {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: 600;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+    font-size: 0.95em;
+    white-space: nowrap;
+}
+
+/* 各セル（中身）部分 */
+table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    color: #444;
+    vertical-align: middle;
+    font-size: 0.9em;
+}
+
+/* 行のホバー効果（マウスを乗せた時に色を変える） */
+table tr:hover {
+    background-color: #f1f8ff; /* 薄い青色 */
+    transition: background-color 0.2s ease;
+}
+
+/* 判定の○×を強調 */
+table td[style*="color: #d9534f"] { /* 正解の時 */
+    font-size: 1.2em;
+}
+table td[style*="color: #337ab7"] { /* 不正解の時 */
+    font-size: 1.2em;
+    opacity: 0.7;
+}
+
+/* レスポンシブ対応：スマホで横にスクロールできるようにする */
+.card-style {
+    overflow-x: auto; /* テーブルがはみ出す場合にスクロールさせる */
+}
+
+/* 詳細表示（確認ボタンで開く行）の装飾 */
+.detail-row {
+    background-color: #fafafa !important;
+}
+
+.detail-content {
+    border: 1px solid #e0e0e0;
+    margin: 10px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* 試験番号のバッジ風デザイン */
+.exam-badge {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.85em;
+    border: 1px solid #bbdefb;
+}
+
+/* ボタンの調整 */
+.btn-round {
+    border: none;
+    transition: transform 0.1s active;
+}
+.btn-round:hover {
+    opacity: 0.8;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* --- 下部ボタンエリアのレイアウト --- */
+.footer-actions {
+    display: flex;
+    flex-wrap: wrap;            /* 幅が足りないときは折り返す */
+    justify-content: center;    /* 中央寄せ */
+    gap: 15px;                  /* ボタン同士の間隔 */
+    margin-top: 40px;
+    padding-bottom: 40px;
+}
+
+/* ボタン共通スタイル */
+.footer-actions .btn-round {
+    flex: 1;                    /* 全てのボタンを同じ幅にする */
+    min-width: 180px;           /* ボタンが小さくなりすぎないように */
+    max-width: 250px;           /* ボタンが大きくなりすぎないように */
+    text-align: center;
+    padding: 15px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff !important;     /* リンクの色を白で固定 */
+    text-decoration: none;
+    border-radius: 50px;        /* 丸みのあるデザイン */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+/* ホバー（マウスを乗せた時）の動き */
+.footer-actions .btn-round:hover {
+    transform: translateY(-2px); /* 少し浮き上がる */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    filter: brightness(1.1);      /* 少し明るくする */
+}
+
+/* クリックした時の動き */
+.footer-actions .btn-round:active {
+    transform: translateY(0);
+}
+
+/* --- ダッシュボード（上部エリア）の装飾 --- */
+.dashboard.card-style {
+    padding: 20px;
+    border-bottom: 3px solid #2196F3; /* 上部にアクセントカラー */
+    margin-bottom: 25px;
+}
+
+.user-welcome {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ボタン群のコンテナ */
+.nav-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ダッシュボード内のボタン限定スタイル */
+.nav-buttons .btn-round {
+    padding: 8px 18px;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* スマホ表示での調整 */
+@media (max-width: 600px) {
+    .dashboard .flex-between {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .nav-buttons {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* ダッシュボード全体の余白と高さを調整 */
+.dashboard.card-style {
+    padding: 20px 30px; /* 左右の余白を広めに */
+    margin-bottom: 25px;
+    border-top: 4px solid #2196F3;
+    border-radius: 12px;
+}
+
+/* 左右に振り分けるコンテナ */
+.dashboard .flex-between {
+    display: flex;
+    justify-content: space-between; /* これで左右両端に分かれる */
+    align-items: center;
+    width: 100%;
+}
+
+/* ユーザー名の装飾 */
+.user-welcome {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+/* ボタン群の配置（右側に固める） */
+.nav-buttons {
+    display: flex;
+    gap: 12px; /* ボタン同士の間隔 */
+}
+
+/* ボタン自体の見た目を history.php に合わせる */
+.nav-buttons .btn-round {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    color: #fff !important;
+    text-decoration: none;
+    border-radius: 50px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+    border: none;
+    display: flex;
+    align-items: center;
+}
+
+.nav-buttons .btn-round:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    opacity: 0.9;
+}
+
+/* --- ツールバー（検索・フィルタエリア） --- */
+.toolbar.card-style {
+    padding: 20px;
+    background-color: #fcfcfc;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 25px;
+    border-radius: 12px;
+}
+
+/* フォーム内のレイアウト */
+.filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    align-items: flex-end; /* ラベルと入力を下揃えに */
+}
+
+/* 各入力項目のラベル */
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #555;
+}
+
+/* セレクトボックスと入力欄の共通デザイン */
+.filter-item select, 
+.filter-item input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #fff;
+    min-width: 140px;
+    transition: border-color 0.2s;
+}
+
+.filter-item select:focus, 
+.filter-item input[type="text"]:focus {
+    border-color: #2196F3;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+/* 実行ボタン（問題を読み込む）のデザイン統一 */
+.btn-submit {
+    padding: 10px 25px;
+    background: #2196F3;      /* 鮮やかな青 */
+    color: white !important;
+    border: none;
+    border-radius: 50px;      /* ここを他のボタンと統一 */
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-submit:hover {
+    background: #1976d2;      /* 少し濃い青 */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+/* ふりがなボタン */
+#toggleRubyBtn {
+    padding: 11px 20px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* ふりがな表示ボタンの改善 */
+#toggleRubyBtn {
+    padding: 10px 22px;
+    background: #6c757d;      /* 落ち着いたグレー */
+    color: white;
+    border: none;
+    border-radius: 50px;      /* 他のボタンと共通の丸み */
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* 他のボタンと共通の影 */
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#toggleRubyBtn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+}
+
+/* ふりがながONの時のスタイル（JavaScriptでクラスを付け替える場合） */
+#toggleRubyBtn.active {
+    background: #FF9800;      /* ONの時はオレンジ色にするなど */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* --- 回答後のカード演出 --- */
+.question-card {
+    transition: all 0.4s ease; /* 色の変化を滑らかに */
+    border: 2px solid transparent; /* 変化を際立たせるための初期枠線 */
+}
+
+/* 正解時のスタイル */
+.card-correct {
+    background-color: #f0f9ff !important; /* ごく薄い青 */
+    border-color: #2196F3 !important;    /* 青い枠線 */
+    box-shadow: 0 0 15px rgba(33, 150, 243, 0.3) !important;
+}
+
+/* 不正解時のスタイル */
+.card-incorrect {
+    background-color: #fff5f5 !important; /* ごく薄い赤 */
+    border-color: #f44336 !important;    /* 赤い枠線 */
+    box-shadow: 0 0 15px rgba(244, 67, 54, 0.2) !important;
+}
+
+/* 正解・不正解テキストの装飾 */
+.answer-status {
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-block;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}

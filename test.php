@@ -10,7 +10,7 @@ restore_credentials('GOOGLE_CREDENTIALS_ROOT_B64');
 $subject = $_GET['subject'] ?? '人間の尊厳と自立';
 $mode = $_GET['mode'] ?? 'sequential';
 $selectedYear = $_GET['year'] ?? '';
-
+$searchKeyword = $_GET['keyword'] ?? ''; // 追加：検索キーワード
 $subjects = ["すべて", "人間の尊厳と自立", "人間関係とコミュニケーション", "社会の理解", "こころとからだ", "発達と老化の理解", "認知症の理解", "障害の理解", "医療性ケア", "介護の基本", "コミュニケーション技術", "生活支援技術", "介護過程", "総合問題"];
 
 require 'vendor/autoload.php';
@@ -35,19 +35,26 @@ echo '</head><body>';
 
 $user = $_SESSION["user"] ?? "guest";
 
-// --- ダッシュボード（共通クラス適用） ---
-echo '<div class="dashboard main-layout card-style" style="text-align:center;">';
+// --- ダッシュボード（test.php の該当箇所を上書き） ---
+echo '<div class="dashboard main-layout card-style">';
 if ($user === "guest") {
-    // 修正箇所：style="margin: 0 auto;" を追加
-    echo "<h2>👋 ようこそ、ゲストさん！</h2><a href='login.php' class='btn btn-primary' style='margin: 0 auto;'>ログイン画面へ</a>";
+    echo '<div style="text-align:center; padding: 10px 0;">';
+    echo "<h2>👋 ようこそ、ゲストさん！</h2>";
+    echo "<a href='login.php' class='btn-round' style='background:#2196F3; display:inline-block; padding:12px 30px;'>ログイン画面へ</a>";
+    echo '</div>';
 } else {
     echo '<div class="flex-between">';
-    echo '  <h2 style="margin:0; font-size:1.4em;">👤 ' . htmlspecialchars($user) . ' さん、こんにちは！</h2>';
-    echo '  <div style="display:flex; gap:8px;">';
+    
+    // 左側：ユーザーメッセージ
+    echo '  <div class="user-welcome">👤 ' . htmlspecialchars($user) . ' <span style="font-size:0.7em; font-weight:normal; color:#666; margin-left:5px;">さんの学習ルーム</span></div>';
+    
+    // 右側：ボタンコンテナ（ここに history.php 同様のスタイルが効く）
+    echo '  <div class="nav-buttons">';
     echo '    <a href="history.php" class="btn-round" style="background:#4CAF50;">📊 学習履歴</a>';
     echo '    <a href="logout.php" class="btn-round" style="background:#f44336;">🚪 ログアウト</a>';
-    echo '    <a href="/exam_app/index.php" class="btn-round" style="background:#9e9e9e;">🏠 閉じる</a>';
+    echo '    <a href="/exam_app/index.php" class="btn-round" style="background:#9e9e9e;">🏠 ホーム</a>';
     echo '  </div>';
+    
     echo '</div>';
 }
 echo '</div>';
@@ -106,57 +113,126 @@ if ($subject === "すべて") {
     }
 }
 
-// 試験回リスト抽出
-$years = [];
+// --- 1. すべてのフィルタリングを一度に行う ---
+$tempFiltered = [];
 foreach ($allValues as $row) {
     $rawExamNum = $row[9] ?? '';
-    if ($rawExamNum !== '') {
-        $parts = explode('-', $rawExamNum);
-        $yearOnly = $parts[0];
-        if (!in_array($yearOnly, $years)) $years[] = $yearOnly;
-    }
-}
-sort($years);
+    $questionText = $row[1] ?? '';
+    $explanationText = $row[8] ?? '';
 
-// フィルタリング
-$filteredValues = [];
-foreach ($allValues as $row) {
-    $rawExamNum = $row[9] ?? '';
+    // A. 試験回のチェック（初期値：一致したと仮定）
+    $yearMatch = false; 
     if ($selectedYear === '') {
-        $filteredValues[] = $row;
+        $yearMatch = true;
     } else {
         $parts = explode('-', $rawExamNum);
-        if ($parts[0] === $selectedYear) $filteredValues[] = $row;
+        if (($parts[0] ?? '') === $selectedYear) {
+            $yearMatch = true;
+        }
+    }
+
+    // B. キーワードのチェック（初期値：一致したと仮定）
+    $keywordMatch = false;
+    if ($searchKeyword === '') {
+        $keywordMatch = true;
+    } else {
+        // キーワードがある場合のみ検索を実行
+        if (mb_strpos($questionText, $searchKeyword) !== false || 
+            mb_strpos($explanationText, $searchKeyword) !== false) {
+            $keywordMatch = true;
+        }
+    }
+
+    // 両方の条件を満たす場合のみ一時配列へ
+    if ($yearMatch && $keywordMatch) {
+        $tempFiltered[] = $row;
     }
 }
-if ($mode === 'random') shuffle($filteredValues);
+// --- 2. 先にページ番号を確定させる（ここを上に持ってくる！） ---
+$perPage = 5;
+$page = max(1, intval($_GET['page'] ?? 1)); // これで $page が定義されます
 
-// --- ツールバー（共通クラス適用） ---
-echo '<div class="toolbar main-layout card-style" style="border:1px solid #eee;">';
-echo '  <form method="GET" id="filterForm" class="no-ruby" style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:center;">';
+// --- 3. モードに応じて並び替えを確定させる ---
+$filteredValues = $tempFiltered;
+
+if ($mode === 'random' && !empty($filteredValues)) {
+    // 現在の検索条件（科目、年、キーワード）に基づいて一意のキーを作成
+    $conditionHash = substr(md5($subject . $selectedYear . $searchKeyword), 0, 8);
+    $shuffleKey = "shuffle_" . $conditionHash;
+
+    // 【修正ポイント】
+    // 1. ページが1かつ、前回の検索条件と異なる場合は新しくシャッフル
+    // 2. それ以外（ページ移動中など）はセッションの順序を維持
+    if ($page == 1 && (!isset($_SESSION['last_condition']) || $_SESSION['last_condition'] !== $conditionHash)) {
+        shuffle($filteredValues);
+        $_SESSION[$shuffleKey] = $filteredValues;
+        $_SESSION['last_condition'] = $conditionHash; // 現在の条件を保存
+    } 
+    // セッションにデータがある場合はそれを採用
+    elseif (isset($_SESSION[$shuffleKey])) {
+        $filteredValues = $_SESSION[$shuffleKey];
+    } 
+    // 万が一セッションが切れていた場合は、その場で一度だけシャッフル
+    else {
+        shuffle($filteredValues);
+        $_SESSION[$shuffleKey] = $filteredValues;
+    }
+} else {
+    // 順番通りモードの場合は条件記録をクリア
+    unset($_SESSION['last_condition']);
+}
+
+// --- 4. 表示範囲の計算 ---
+$total = count($filteredValues);
+$start = ($page - 1) * $perPage;
+$end = min($start + $perPage, $total);
+
+//--- ツールバー ---
+echo '<div class="toolbar main-layout card-style">';
+echo '  <form method="GET" id="filterForm" class="no-ruby filter-group">';
 echo '    <input type="hidden" name="page" value="1">';
-echo '    <label>📚 科目: <select name="subject" class="no-ruby" style="padding:8px; border-radius:5px; border:2px solid #2196F3;">';
+
+// 科目選択
+echo '    <div class="filter-item">';
+echo '      <label>📚 科目</label>';
+echo '      <select name="subject">';
 foreach ($subjects as $s) {
     $sel = ($subject === $s) ? "selected" : "";
     echo "<option value='".htmlspecialchars($s)."' $sel>".htmlspecialchars($s)."</option>";
 }
-echo '    </select></label>';
+echo '      </select>';
+echo '    </div>';
 
-echo '    <label>📅 試験回: <select name="year" class="no-ruby" style="padding:8px; border-radius:5px; border:1px solid #ccc;">';
-echo '      <option value="">すべて</option>';
+// 試験回
+echo '    <div class="filter-item">';
+echo '      <label>📅 試験回</label>';
+echo '      <select name="year">';
+echo '        <option value="">すべて</option>';
 foreach ($years as $y) { $sel = ($selectedYear == $y) ? "selected" : ""; echo "<option value='$y' $sel>第{$y}回</option>"; }
-echo '    </select></label>';
+echo '      </select>';
+echo '    </div>';
 
-echo '    <label>⚙️ 形式: <select name="mode" class="no-ruby" style="padding:8px; border-radius:5px; border:1px solid #ccc;">';
-echo '      <option value="sequential" '.($mode==='sequential'?'selected':'').'>📋 順番に</option>';
-echo '      <option value="random" '.($mode==='random'?'selected':'').'>🎲 ランダム</option>';
-echo '    </select></label>';
+// 形式
+echo '    <div class="filter-item">';
+echo '      <label>⚙️ 形式</label>';
+echo '      <select name="mode">';
+echo '        <option value="sequential" '.($mode==='sequential'?'selected':'').'>📋 順番に</option>';
+echo '        <option value="random" '.($mode==='random'?'selected':'').'>🎲 ランダム</option>';
+echo '        </select>';
+echo '    </div>';
 
-echo '    <button type="submit" class="no-ruby" style="padding:8px 15px; background:#2196F3; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">問題を読み込む</button>';
-echo '    <button type="button" id="toggleRubyBtn" class="no-ruby" style="padding:8px 15px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">ふりがな表示</button>';
+// 検索キーワード
+echo '    <div class="filter-item">';
+echo '      <label>🔍 検索</label>';
+echo '      <input type="text" name="keyword" value="'.htmlspecialchars($searchKeyword).'" placeholder="例: 認知症">';
+echo '    </div>';
+
+// ボタン類
+echo '    <button type="submit" class="btn-submit">🚀 問題を読み込む</button>';
+echo '    <button type="button" id="toggleRubyBtn"><span>あ/a</span> ふりがな表示</button>';
+
 echo '  </form>';
 echo '</div>';
-
 // --- 問題表示エリア ---
 $perPage = 5;
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -164,8 +240,26 @@ $total = count($filteredValues);
 $start = ($page - 1) * $perPage;
 $end = min($start + $perPage, $total);
 
+// --- ヒット件数・条件の表示 ---
+echo "<div class='main-layout' style='margin-bottom:20px; padding:15px; background:#fff; border-radius:8px; border:1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);'>";
+echo "  <div style='display:flex; justify-content:space-between; align-items:center;'>";
+echo "    <div style='font-weight:bold;'>";
+            if ($searchKeyword !== '') {
+                echo "🔍 「<span style='color:#d32f2f;'>" . htmlspecialchars($searchKeyword) . "</span>」の検索結果: ";
+            }
+            echo "<span style='font-size:1.2em; color:#2196F3;'>" . number_format($total) . "</span> 件";
+echo "    </div>";
+echo "    <div style='font-size:0.9em; color:#666;'>";
+echo "      " . htmlspecialchars($subject) . ($selectedYear ? " / 第{$selectedYear}回" : "");
+echo "    </div>";
+echo "  </div>";
+echo "</div>";
+
 if ($total === 0) {
-    echo "<p style='text-align:center;'>指定された条件の問題は見つかりませんでした。</p>";
+    echo "<div class='main-layout card-style' style='text-align:center; padding:40px;'>";
+    echo "  <p style='color:#666; font-size:1.1em;'>指定された条件の問題は見つかりませんでした。</p>";
+    echo "  <a href='test.php?subject=".urlencode($subject)."' style='color:#2196F3; text-decoration:none;'>◀ 条件をリセットする</a>";
+    echo "</div>";
 } else {
     echo "<div class='main-layout' style='text-align:center; margin-bottom:10px;'>{$subject} " . ($selectedYear ? "第{$selectedYear}回 " : "") . "（全 {$total} 問）</div>";
     for ($index = $start; $index < $end; $index++) {
@@ -209,7 +303,7 @@ if ($total === 0) {
 
     // ページナビ
     echo "<div class='main-layout' style='text-align:center; margin:40px 0;'>";
-    $baseUrl = "test.php?subject=".urlencode($subject)."&mode=".urlencode($mode)."&year=".urlencode($selectedYear);
+    $baseUrl = "test.php?subject=".urlencode($subject)."&mode=".urlencode($mode)."&year=".urlencode($selectedYear)."&keyword=".urlencode($searchKeyword);
     if ($page > 1) echo "<a href='{$baseUrl}&page=".($page-1)."' class='btn-round' style='background:#ffffff; border:2px solid #2196F3; color:#2196F3 !important; padding:12px 25px;'>◀ 前の5問</a>";
     if ($end < $total) echo "<a href='{$baseUrl}&page=".($page+1)."' class='btn-round' style='background:#2196F3; padding:12px 25px;'>次の5問 ▶</a>";
     echo "</div>";

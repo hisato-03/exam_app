@@ -95,12 +95,20 @@ try {
   <meta charset="UTF-8">
   <title>学習履歴</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="main-layout container">
   <h1>📊 学習履歴（試験のみ）</h1>
 
   <?php if (!empty($subjectStats)): ?>
+    <div class="card-style" style="margin-bottom: 30px;">
+        <h2>📊 科目別分析グラフ</h2>
+        <div style="max-width: 800px; margin: 0 auto; height: 400px;">
+            <canvas id="subjectChart"></canvas>
+        </div>
+    </div>
+
     <div class="card-style" style="margin-bottom: 30px;">
         <h2>科目別正解率一覧</h2>
         <table>
@@ -193,28 +201,71 @@ try {
     <p>まだ履歴はありません。</p>
   <?php endif; ?>
 
-  <div class="flex-between" style="margin-top:40px; justify-content:center; gap:15px;">
-    <a href="test.php" class="btn-round" style="background:#2196F3; padding:12px 25px;">◀ 試験画面へ戻る</a>
-    <a href="review.php" class="btn-round" style="background:#d32f2f; padding:12px 25px;">📝 復習モードへ</a>
-    <a href="dictionary_history.php" class="btn-round" style="background:#6c757d; padding:12px 25px;">🔍 単語履歴を見る</a>
-  </div>
+  <div class="footer-actions main-layout">
+    <a href="test.php" class="btn-round" style="background:#2196F3;">◀ 試験画面へ戻る</a>
+    <a href="review.php" class="btn-round" style="background:#d32f2f;">📝 復習モードへ</a>
+    <a href="dictionary_history.php" class="btn-round" style="background:#6c757d;">🔍 単語履歴を見る</a>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>window.dictMap = <?php echo $dictJson ?? '{}'; ?>;</script>
 <script src="script.js"></script>
+
 <script>
 $(function() {
+    // 1. 詳細表示の切り替え
     $(".show-detail").on("click", function() {
         const targetId = $(this).data("target");
         const $detailRow = $("#" + targetId);
         $detailRow.toggle();
         if ($detailRow.is(":visible") && typeof window.applyRuby === "function") {
             const $target = $detailRow.find('.content-ruby');
-            window.applyRuby($target);
+            window.applyRuby($target[0]);
             window.applyRubyVisibility($target);
         }
     });
+
+    // 2. グラフ描画
+    const statsData = <?php echo json_encode($subjectStats); ?>;
+    if (statsData && statsData.length > 0) {
+        const labels = statsData.map(item => item.subject);
+        const accuracyData = statsData.map(item => {
+            return item.total > 0 ? ((item.correct / item.total) * 100).toFixed(1) : 0;
+        });
+
+        const ctx = document.getElementById('subjectChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '正解率 (%)',
+                    data: accuracyData,
+                    backgroundColor: 'rgba(33, 150, 243, 0.6)',
+                    borderColor: 'rgba(33, 150, 243, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { beginAtZero: true, max: 100, title: { display: true, text: '正解率 (%)' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) { return `正解率: ${context.parsed.x}%`; }
+                        }
+                    }
+                }
+            }
+        });
+    }
 });
 </script>
 </body>
