@@ -64,22 +64,58 @@ $(function() {
                     const [kanji, furiganaHTML] = found;
                     if (firstIndex > 0) frag.appendChild(document.createTextNode(remaining.slice(0, firstIndex)));
 
-                    let rubyElement;
+                    // --- 送り仮名を分離する処理の開始 ---
+                    let rubyContainer = document.createElement("span"); 
+                    
                     if (furiganaHTML.includes("<ruby>")) {
-                        rubyElement = document.createElement("span");
-                        rubyElement.innerHTML = furiganaHTML;
+                        // 既にHTML化されている場合はそのまま
+                        rubyContainer.innerHTML = furiganaHTML;
                     } else {
-                        rubyElement = document.createElement("ruby");
-                        rubyElement.innerHTML = `<rb>${kanji}</rb><rt>${furiganaHTML}</rt>`;
+                        // スマート・ルビ・ロジック
+                        let word = kanji;
+                        let reading = furiganaHTML;
+                        let wordLen = word.length;
+                        let readingLen = reading.length;
+                        let okuriganaLen = 0;
+
+                        // 後ろから一致するひらがな（送り仮名）を探す
+                        while (okuriganaLen < wordLen && okuriganaLen < readingLen) {
+                            let wChar = word[wordLen - 1 - okuriganaLen];
+                            let rChar = reading[readingLen - 1 - okuriganaLen];
+                            // ひらがなが一致する場合、送り仮名とみなす
+                            if (wChar === rChar && /[ぁ-ん]/.test(wChar)) {
+                                okuriganaLen++;
+                            } else {
+                                break;
+                            }
+                        }
+
+                        if (okuriganaLen > 0 && okuriganaLen < wordLen) {
+                            // 送り仮名を分離してルビを振る
+                            let baseKanji = word.substring(0, wordLen - okuriganaLen);
+                            let rubyPart = reading.substring(0, readingLen - okuriganaLen);
+                            let okurigana = word.substring(wordLen - okuriganaLen);
+                            rubyContainer.innerHTML = `<ruby><rb>${baseKanji}</rb><rt>${rubyPart}</rt></ruby>${okurigana}`;
+                        } else {
+                            // 送り仮名がない場合
+                            rubyContainer.innerHTML = `<ruby><rb>${word}</rb><rt>${reading}</rt></ruby>`;
+                        }
                     }
 
+                    // 属性（クリックイベント用クラス等）を ruby 要素に付与
+                    const rubyElement = rubyContainer.querySelector("ruby") || rubyContainer;
                     rubyElement.classList.add("clickable-ruby");
                     if (window.meaningMap && window.meaningMap[kanji]) {
                         rubyElement.classList.add("has-meaning");
                     }
                     rubyElement.setAttribute("data-word", kanji);
                     
-                    frag.appendChild(rubyElement);
+                    // 生成したノード（ruby + 送り仮名）を fragment に追加
+                    while (rubyContainer.firstChild) {
+                        frag.appendChild(rubyContainer.firstChild);
+                    }
+                    // --- 送り仮名処理の終了 ---
+                    
                     remaining = remaining.slice(firstIndex + kanji.length);
                     replaced = true;
                 } else {
@@ -128,7 +164,7 @@ $(function() {
     $('.qa-form').on('submit', function(e) {
         e.preventDefault();
         const $form = $(this);
-        const $card = $form.closest('.question-card'); // 親カードを取得
+        const $card = $form.closest('.question-card'); 
         const $resultDiv = $form.find('.answer');
         const $explanation = $form.find('.explanation');
         const $submitBtn = $form.find('.btn-answer');
@@ -144,18 +180,15 @@ $(function() {
         .done(function(data) {
             let statusHtml = '';
             if (data.is_correct) {
-                // 正解：カードを青くする
                 $card.addClass('card-correct').removeClass('card-incorrect');
                 statusHtml = '<div class="answer-status" style="color:#1976d2; font-weight:bold; font-size:1.3em; margin:15px 0;">⭕ 正解です！</div>';
             } else {
-                // 不正解：カードを赤くする
                 $card.addClass('card-incorrect').removeClass('card-correct');
                 statusHtml = '<div class="answer-status" style="color:#d32f2f; font-weight:bold; font-size:1.3em; margin:15px 0;">❌ 正解は [' + data.correct + '] です。</div>';
             }
             
             $resultDiv.html(statusHtml);
 
-            // 新しく表示されたテキストにルビを適用
             if (typeof window.applyRuby === "function") {
                 window.applyRuby($resultDiv[0]);
                 window.applyRuby($explanation[0]);

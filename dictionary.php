@@ -91,12 +91,41 @@ try {
 } catch (Exception $e) { /* APIエラー時 */ }
 
 // --- 追加：PHP側でスマート・ルビを生成する関数 ---
-function formatSmartRuby($word, $ruby) {
-    if (empty($ruby) || $word === $ruby) {
+function formatSmartRuby($word, $reading) {
+    if (empty($reading) || $word === $reading) {
         return htmlspecialchars($word);
     }
-    // 単語全体をrubyタグで囲む（二重表示を防ぐため、単純なテキスト表示を置き換える）
-    return "<ruby>" . htmlspecialchars($word) . "<rt>" . htmlspecialchars($ruby) . "</rt></ruby>";
+
+    // 文字数を取得
+    $wordLen = mb_strlen($word);
+    $readingLen = mb_strlen($reading);
+    $okuriganaLen = 0;
+
+    // 後ろから1文字ずつ比較して、一致する送り仮名の長さを調べる
+    while ($okuriganaLen < $wordLen && $okuriganaLen < $readingLen) {
+        $wChar = mb_substr($word, $wordLen - 1 - $okuriganaLen, 1);
+        $rChar = mb_substr($reading, $readingLen - 1 - $okuriganaLen, 1);
+
+        // ひらがなが一致する場合、送り仮名とみなす
+        if ($wChar === $rChar) {
+            $okuriganaLen++;
+        } else {
+            break;
+        }
+    }
+
+    if ($okuriganaLen > 0 && $okuriganaLen < $wordLen) {
+        // 送り仮名を分離してルビを振る
+        // 例：「行い」「おこない」 → <ruby>行<rt>おこな</rt></ruby>い
+        $baseKanji = mb_substr($word, 0, $wordLen - $okuriganaLen);
+        $rubyPart  = mb_substr($reading, 0, $readingLen - $okuriganaLen);
+        $okurigana = mb_substr($word, $wordLen - $okuriganaLen);
+
+        return "<ruby>" . htmlspecialchars($baseKanji) . "<rt>" . htmlspecialchars($rubyPart) . "</rt></ruby>" . htmlspecialchars($okurigana);
+    } else {
+        // 送り仮名がない、または全て一致（ひらがなのみ等）の場合
+        return "<ruby>" . htmlspecialchars($word) . "<rt>" . htmlspecialchars($reading) . "</rt></ruby>";
+    }
 }
 
 // ▼ 翻訳実行
@@ -148,9 +177,9 @@ if (!empty($word) && !empty($meaning) && $userId > 0) {
     </div>
 
     <div class="card-style" style="margin-bottom:25px; border-left: 5px solid #2196F3;">
-    <div style="font-size:1.4em; margin-bottom:15px;">
-        <strong>単語:</strong> <span class="no-ruby"><?php echo formatSmartRuby($word, $ruby); ?></span>
-    </div>
+        <div style="font-size:1.4em; margin-bottom:15px;">
+            <strong>単語:</strong> <span class="no-ruby"><?php echo formatSmartRuby($word, $ruby); ?></span>
+        </div>
 
         <?php if (!empty($imageUrl)): ?>
             <div class="dictionary-image-container" style="text-align:center; margin-bottom:20px;">
@@ -167,6 +196,24 @@ if (!empty($word) && !empty($meaning) && $userId > 0) {
         </div>
     </div>
 
+    <div class="card-style" style="margin-bottom:30px; border-left: 5px solid #4CAF50;">
+        <div style="margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+            <label for="lang-select"><strong>🌎 翻訳言語:</strong></label>
+            <select id="lang-select" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
+                <option value="en">English</option>
+                <option value="tl">Tagalog</option>
+                <option value="my">Myanmar</option>
+                <option value="th">Thai</option>
+            </select>
+        </div>
+        <div id="translation-result" style="padding:15px; background:#e8f5e9; border-radius:8px; min-height:60px;">
+            <div class="word"><strong>English:</strong></div>
+            <div class="meaning" style="font-size:1.1em; margin-top:5px;">
+                <?php echo htmlspecialchars($translations['en'] ?? ''); ?>
+            </div>
+        </div>
+    </div>
+
     <div class="flex-between" style="justify-content:center; gap:15px;">
         <a href="dictionary_history.php" class="btn-round" style="background:#6c757d; padding:12px 25px;">📖 検索履歴</a>
         <a href="test.php?subject=<?php echo urlencode($subject); ?>" id="backLink" class="btn-round" style="background:#2196F3; padding:12px 25px;">◀ 試験画面へ戻る</a>
@@ -178,19 +225,22 @@ $(function() {
     if (window.opener) { $("#backLink").hide(); }
     const translations = <?php echo $translationsJson; ?>;
 
-    // script.js の関数を呼び出し
+    // script.js のルビ適用
     if (typeof window.applyRuby === "function") {
-        // ページ全体ではなく、".content-ruby"（意味のエリア）の中だけルビを振る
         window.applyRuby('.content-ruby');
+        // visibilityも連動させる
+        if (typeof window.applyRubyVisibility === "function") {
+            window.applyRubyVisibility('.content-ruby');
         }
     }
 
+    // 言語切り替えイベント
     $('#lang-select').on('change', function() {
         const lang = $(this).val();
         const labels = { 'en': 'English', 'tl': 'Tagalog', 'my': 'Myanmar', 'th': 'Thai' };
         $('#translation-result').html(
             '<div class="word"><strong>' + labels[lang] + ':</strong></div>' +
-            '<div class="meaning" style="font-size:1.1em; margin-top:5px;">' + translations[lang] + '</div>'
+            '<div class="meaning" style="font-size:1.1em; margin-top:5px;">' + (translations[lang] || '---') + '</div>'
         );
     });
 });
