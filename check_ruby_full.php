@@ -16,7 +16,7 @@ use Google\Service\Sheets;
 // --- 設定 ---
 $dictionarySheetId = '1LDr4Acf_4SE-Wzp-ypPxM6COZdOt2QYumak8hIVVdxo';
 $problemSheetId    = '1wBLqdju-BmXS--aPCMMC3PipvCpBFXmdVemT0X2rKew';
-$subjects = ["人間の尊厳と自立", "人間関係とコミュニケーション", "社会 of 理解", "こころとからだ", "発達と老化の理解", "認知症の理解", "障害の理解", "医療的ケア", "介護の基本", "コミュニケーション技術", "生活支援技術", "介護過程", "総合問題"];
+$subjects = ["人間の尊厳と自立", "人間関係とコミュニケーション", "社会の理解", "こころとからだ", "発達と老化の理解", "認知症の理解", "障害の理解", "医療的ケア", "介護の基本", "コミュニケーション技術", "生活支援技術", "介護過程", "総合問題"];
 
 $client = new Client();
 $client->setAuthConfig(__DIR__ . '/credentials.json');
