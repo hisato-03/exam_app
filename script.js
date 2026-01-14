@@ -208,7 +208,41 @@ $(function() {
         const url = `dictionary.php?word=${encodeURIComponent(word)}`;
         window.open(url, 'dictWin', 'width=600,height=800,scrollbars=yes');
     });
+    
+    // --- 6. 単語履歴の「覚えた！」ステータス切り替え (dictionary_history.php 用) ---
+    window.toggleMaster = function(btn, word) {
+        const $row = $(btn).closest('tr');
+        const $btn = $(btn);
+        // 現在のテキストが ⬜ なら、これから「覚えた(1)」にする
+        const isNowMastered = $btn.text().trim() === '⬜' ? 1 : 0;
 
+        $.ajax({
+            url: 'update_word_status.php',
+            type: 'POST',
+            data: {
+                word: word,
+                status: isNowMastered
+            },
+            dataType: 'json'
+        })
+        .done(function(response) {
+            if (response.success) {
+                if (isNowMastered) {
+                    $btn.text('✅');
+                    $row.addClass('mastered-row');
+                } else {
+                    $btn.text('⬜');
+                    $row.removeClass('mastered-row');
+                }
+            } else {
+                alert('エラーが発生しました。');
+            }
+        })
+        .fail(function() {
+            alert('通信に失敗しました。');
+        });
+    };
+    
     // 初期実行
     window.applyRuby(".content-ruby");
     window.applyRuby(".ruby-target");

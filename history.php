@@ -100,7 +100,11 @@ try {
 <body>
 <div class="main-layout container">
   <h1>📊 学習履歴（試験のみ）</h1>
-
+  <div class="footer-actions main-layout">
+    <a href="test.php" class="btn-round" style="background:#2196F3;">◀ 試験画面へ戻る</a>
+    <a href="review.php" class="btn-round" style="background:#d32f2f;">📝 復習モードへ</a>
+    <a href="dictionary_history.php" class="btn-round" style="background:#6c757d;">🔍 単語履歴を見る</a>
+   </div>
   <?php if (!empty($subjectStats)): ?>
     <div class="card-style" style="margin-bottom: 30px;">
         <h2>📊 科目別分析グラフ</h2>
@@ -129,6 +133,8 @@ try {
   <?php if (!empty($records)): ?>
     <div class="card-style">
         <h2>履歴一覧</h2>
+   
+
         <div style="overflow-x: auto;">
             <table>
               <tr>
@@ -201,11 +207,6 @@ try {
     <p>まだ履歴はありません。</p>
   <?php endif; ?>
 
-  <div class="footer-actions main-layout">
-    <a href="test.php" class="btn-round" style="background:#2196F3;">◀ 試験画面へ戻る</a>
-    <a href="review.php" class="btn-round" style="background:#d32f2f;">📝 復習モードへ</a>
-    <a href="dictionary_history.php" class="btn-round" style="background:#6c757d;">🔍 単語履歴を見る</a>
-</div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

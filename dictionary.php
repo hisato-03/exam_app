@@ -66,9 +66,13 @@ $client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
 $service = new Google\Service\Sheets($client);
 
 try {
-    $dictResponse = $service->spreadsheets_values->get('1LDr4Acf_4SE-Wzp-ypPxM6COZdOt2QYumak8hIVVdxo', 'dictionary_upload!A2:E');
+    // 💡 取得範囲を A2:E から A2:I に変更
+    $dictResponse = $service->spreadsheets_values->get('1LDr4Acf_4SE-Wzp-ypPxM6COZdOt2QYumak8hIVVdxo', 'dictionary_upload!A2:I');
     $dictValues = $dictResponse->getValues() ?? [];
     
+    // スプレッドシート由来の翻訳を保持する変数を初期化
+    $sheetTrans = ['en' => '', 'tl' => '', 'my' => '', 'th' => ''];
+
     foreach ($dictValues as $row) {
         $w = $row[0] ?? '';
         $r = $row[1] ?? '';
@@ -82,6 +86,12 @@ try {
             $meaning = $row[2] ?? '';
             $imageUrl = $row[4] ?? '';
             
+            // 💡 スプレッドシートから翻訳情報を取得 (F=5, G=6, H=7, I=8)
+            $sheetTrans['en'] = $row[5] ?? '';
+            $sheetTrans['tl'] = $row[6] ?? '';
+            $sheetTrans['my'] = $row[7] ?? '';
+            $sheetTrans['th'] = $row[8] ?? '';
+
             try {
                 $ins = $pdo->prepare("INSERT IGNORE INTO dictionary_cache (word, ruby, meaning, image_url) VALUES (?, ?, ?, ?)");
                 $ins->execute([$word, $ruby, $meaning, $imageUrl]);
@@ -128,21 +138,35 @@ function formatSmartRuby($word, $reading) {
     }
 }
 
-// ▼ 翻訳実行
+// ▼ 翻訳実行（修正版：スプレッドシート優先）
 $translations = [
-    'en' => translateText($word, 'en'),
-    'tl' => translateText($word, 'tl'),
-    'my' => translateText($word, 'my'),
-    'th' => translateText($word, 'th')
+    'en' => !empty($sheetTrans['en']) ? $sheetTrans['en'] : translateText($word, 'en'),
+    'tl' => !empty($sheetTrans['tl']) ? $sheetTrans['tl'] : translateText($word, 'tl'),
+    'my' => !empty($sheetTrans['my']) ? $sheetTrans['my'] : translateText($word, 'my'),
+    'th' => !empty($sheetTrans['th']) ? $sheetTrans['th'] : translateText($word, 'th')
 ];
 $translationsJson = json_encode($translations, JSON_UNESCAPED_UNICODE);
 
-// ▼ 履歴保存
+// ▼ 履歴保存（修正版：多言語JSON対応）
 if (!empty($word) && !empty($meaning) && $userId > 0) {
     try {
-        $stmt = $pdo->prepare("INSERT INTO searched_words (user_id, word, meaning, subject, created_at) VALUES (?, ?, ?, ?, NOW())");
-        $stmt->execute([$userId, $word, $meaning, $subject]);
-    } catch (PDOException $e) { }
+        // translations カラムに JSON を流し込む
+        $stmt = $pdo->prepare("
+            INSERT INTO searched_words 
+            (user_id, word, meaning, subject, translations, created_at) 
+            VALUES (?, ?, ?, ?, ?, NOW())
+        ");
+        
+        $stmt->execute([
+            $userId, 
+            $word, 
+            $meaning, 
+            $subject, 
+            json_encode($translations, JSON_UNESCAPED_UNICODE) // 全言語をJSON化
+        ]);
+    } catch (PDOException $e) {
+        // カラムが未作成だとここでエラーになります
+    }
 }
 
 ?>
