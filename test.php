@@ -31,7 +31,7 @@ if (file_exists($metaPath)) {
 // --------------------------------------------------------
 
 echo '<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>';
-echo '</head><body>';
+
 
 $user = $_SESSION["user"] ?? "guest";
 
@@ -64,6 +64,40 @@ $client = new Client();
 $client->setAuthConfig(__DIR__ . '/credentials.json');
 $client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
 $service = new Google\Service\Sheets($client);
+$videoTags = []; 
+try {
+    $videoTags = getManagementTags($service);
+} catch (Exception $e) {
+    $videoTags = [];
+}
+// --- [追加] 管理表から動画タグリストを取得する ---
+function getManagementTags($service) {
+    $spreadsheetId = '1evXOkxn2Pjpv9vXr95jMknI8UGK3IxXP1FbvWSeQIKY';
+    // D列(動画名)からH列(ボタン用ラベル)までを取得
+    $range = "'管理表'!D3:H"; 
+    
+    try {
+        $response = $service->spreadsheets_values->get($spreadsheetId, $range);
+        $values = $response->getValues();
+        
+        $tags = [];
+        if (!empty($values)) {
+            foreach ($values as $row) {
+                // $row[0]=D列, $row[3]=G列, $row[4]=H列
+                if (isset($row[0]) && trim($row[0]) !== '') {
+                    $tags[] = [
+                        'video_title' => trim($row[0]),      // D列：動画タイトル（リンク用）
+                        'keywords'    => $row[3] ?? '',      // G列：判定用キーワード
+                        'button_label' => $row[4] ?? ''      // H列：ボタンに表示する短い名前
+                    ];
+                }
+            }
+        }
+        return $tags;
+    } catch (Exception $e) {
+        return [];
+    }
+}
 
 // --- test.php の辞書取得部分 ---
 try {
@@ -249,6 +283,7 @@ echo '    <button type="button" id="toggleRubyBtn"><span>あ/a</span> ふりが�
 
 echo '  </form>';
 echo '</div>';
+
 // --- 問題表示エリア ---
 $perPage = 5;
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -311,11 +346,26 @@ if ($total === 0) {
             }
         }
         echo "</ul>";
-        echo "<button type='submit' class='btn-answer no-ruby' style='padding:12px 30px; background:#4CAF50; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:bold;'>回答を送信する</button>";
-        echo "<div class='answer content-ruby'></div>";
+
+        // --- ここから書き換え：ボタンを横に並べるためのコンテナ ---
+        echo "<div style='display: flex; align-items: center; gap: 10px; margin-top: 20px; flex-wrap: wrap;'>";
+            
+            // 1. 回答送信ボタン
+            echo "<button type='submit' class='btn-answer no-ruby' style='padding:12px 30px; background:#4CAF50; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:bold;'>回答を送信する</button>";
+            
+            // --- 2. 🎥 動画リンク用の受け皿 ---
+            $allTextForMatch = ($row[1] ?? '') . ($row[2] ?? '') . ($row[3] ?? '') . ($row[4] ?? '') . ($row[5] ?? '') . ($row[6] ?? '') . ($row[8] ?? '');
+            
+            // ★ここに箱（div）を置くことで、5問それぞれにボタンが出るようになります
+            echo "<div class='video-link-container' data-alltext='" . htmlspecialchars($allTextForMatch, ENT_QUOTES) . "'></div>";
+            
+        echo "</div>"; // gap コンテナの閉じ
         echo "<div class='explanation content-ruby' style='display:none; margin-top:20px; padding:15px; background:#e3f2fd; border-left:5px solid #2196F3;'><strong>💡 解説:</strong> ".htmlspecialchars($row[8])."</div>";
         echo "</form></div>";
-    }
+    } // ← ループの終わりはここ
+
+
+
 
     // ページナビ
     echo "<div class='main-layout' style='text-align:center; margin:40px 0;'>";
@@ -324,33 +374,76 @@ if ($total === 0) {
     if ($end < $total) echo "<a href='{$baseUrl}&page=".($page+1)."' class='btn-round' style='background:#2196F3; padding:12px 25px;'>次の5問 ▶</a>";
     echo "</div>";
 }
-
 ?>
+
 <script src="script.js?v=<?php echo time(); ?>"></script>
 
 <script>
+// 1. 管理表から取得したタグを定数にセット
+const VIDEO_TAGS = <?php echo json_encode($videoTags ?? [], JSON_UNESCAPED_UNICODE); ?>;
+
 $(function() {
-    // 1. ページ読み込み完了時のルビ適用
-    $(window).on('load', function() {
-    console.log("Window loaded. Applying ruby...");
+    console.log("VIDEO_TAGS initialized:", VIDEO_TAGS);
+
+    // 動画ボタンを生成するメイン関数
+    function setupVideoButtons() {
+        const $containers = $('.video-link-container');
+        if ($containers.length === 0) return;
+
+        $containers.each(function(i) {
+            const $container = $(this);
+            if ($container.children().length > 0) return; 
+
+            let fullText = ($container.attr('data-alltext') || "").replace(/\s+/g, "");
+            
+            VIDEO_TAGS.forEach(tagObj => {
+                const videoTitle = tagObj.video_title;  // D列
+                const rawKeywords = tagObj.keywords;    // G列
+                const buttonLabel = tagObj.button_label || videoTitle; // H列
+
+                let keywordList = [];
+                if (rawKeywords && rawKeywords.trim() !== "") {
+                    keywordList = rawKeywords.split(/[、,]/);
+                } else {
+                    keywordList = [videoTitle];
+                }
+
+                const isMatch = keywordList.some(k => {
+                    const cleanK = k.trim().replace(/\s+/g, "");
+                    return cleanK !== "" && fullText.indexOf(cleanK) !== -1;
+                });
+
+                if (isMatch) {
+                    $container.append(`
+                        <a href="video_app/index.php?category=${encodeURIComponent(videoTitle)}" target="_blank" class="no-ruby" 
+                           style="padding:6px 14px; background:#FF9800; color:white; border-radius:20px; 
+                                  cursor:pointer; font-weight:bold; text-decoration:none; font-size:11px; 
+                                  display:inline-flex; align-items:center; gap:4px; transition: 0.3s; margin-right:4px; margin-bottom:4px;">
+                            🎥 ${buttonLabel}
+                        </a>
+                    `);
+                }
+            });
+        });
+    }
+
+    // 実行指示
+    setupVideoButtons();
+    setTimeout(setupVideoButtons, 500);
+    setTimeout(setupVideoButtons, 1500);
+
+    // ルビ適用
     if (typeof window.applyRuby === "function") {
         setTimeout(function() {
-            // 実行前に辞書があるかチェック
-            console.log("Dictionary Check:", window.dictMap); 
-            
-            $('.content-ruby').each(function() {
-                window.applyRuby(this); 
-            });
+            $('.content-ruby').each(function() { window.applyRuby(this); });
             window.applyRubyVisibility('.content-ruby');
-        }, 800); // 余裕を持って800ミリ秒待つ
-        }
-    });
+        }, 800);
+    }
 
-    // 2. 回答送信（Ajax）処理
+    // 回答送信（Ajax）処理
     $('.qa-form').on('submit', function(e) {
         e.preventDefault();
         const $form = $(this);
-        const $resultDiv = $form.find('.answer');
         const $explanation = $form.find('.explanation');
         const $submitBtn = $form.find('.btn-answer');
 
@@ -367,11 +460,9 @@ $(function() {
                 ? '<div style="color:#d9534f; font-weight:bold; font-size:1.3em; margin:15px 0;">⭕ 正解です！</div>' 
                 : '<div style="color:#337ab7; font-weight:bold; font-size:1.3em; margin:15px 0;">❌ 正解は [' + data.correct + '] です。</div>';
             
-            $resultDiv.html(html);
-
+            $explanation.before(html);
             if (typeof window.applyRuby === "function") {
-                window.applyRuby($resultDiv[0]);
-                window.applyRuby($explanation[0]);
+                $('.content-ruby').each(function() { window.applyRuby(this); });
                 window.applyRubyVisibility('.content-ruby');
             }
             $explanation.slideDown();
@@ -379,35 +470,26 @@ $(function() {
         });
     });
 
-    // 3. マウスアップ時の辞書判定（ポップアップ）
+    // 辞書判定
     $(document).on("mouseup", function(e) {
         const sel = window.getSelection().toString().trim();
         if (sel.length > 0 && window.dictMap && window.dictMap[sel]) {
             $("#dictPopup").remove();
             $('<div id="dictPopup">📖 「' + sel + '」の意味を調べる</div>').css({
-                position: "absolute", 
-                left: e.pageX + 10, 
-                top: e.pageY + 10, 
-                padding: "10px 20px", 
-                background: "#2196F3", 
-                color: "#fff", 
-                borderRadius: "6px", 
-                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                cursor: "pointer", 
-                zIndex: 9999,
-                fontWeight: "bold"
+                position: "absolute", left: e.pageX + 10, top: e.pageY + 10, 
+                padding: "10px 20px", background: "#2196F3", color: "#fff", 
+                borderRadius: "6px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                cursor: "pointer", zIndex: 9999, fontWeight: "bold"
             })
             .appendTo("body")
             .on("click", function() { 
                 location.href = "dictionary.php?word=" + encodeURIComponent(sel) + "&subject=" + encodeURIComponent("<?php echo $subject; ?>"); 
             });
-        } else { 
-            if (!$(e.target).closest("#dictPopup").length) {
-                $("#dictPopup").remove(); 
-            }
+        } else if (!$(e.target).closest("#dictPopup").length) {
+            $("#dictPopup").remove(); 
         }
     });
 });
 </script>
 </body>
-</html>
+</html>    

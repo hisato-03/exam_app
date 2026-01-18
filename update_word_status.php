@@ -1,5 +1,6 @@
 <?php
-// update_word_status.php
+// 自分の弱点を克服するための学習ツール 
+// バックグラウンドでMySQLのデータ書き換え
 session_start();
 $userId = $_SESSION["user_id"] ?? 0;
 

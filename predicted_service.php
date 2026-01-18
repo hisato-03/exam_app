@@ -48,7 +48,7 @@ function getPredictedQuestionsFromSheet($sheetName) {
                     'explanation'  => $row[8] ?? '',
                     'origin'       => $row[9] ?? '',  // 試験回-問題番号
                     'category_sub' => $row[10] ?? '', // 推測された小項目
-                    'image_url'    => $row[12] ?? ''  // M列（インデックス12）
+                    'image_url'    => $row[12] ?? ''  // PHP読込み（M列　インデックス12）
                 ];
             }
         }
