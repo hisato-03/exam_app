@@ -70,11 +70,12 @@ try {
 } catch (Exception $e) {
     $videoTags = [];
 }
-// --- [追加] 管理表から動画タグリストを取得する ---
+
+// --- [修正版] 管理表から動画タグリストを取得する ---
 function getManagementTags($service) {
     $spreadsheetId = '1evXOkxn2Pjpv9vXr95jMknI8UGK3IxXP1FbvWSeQIKY';
-    // D列(動画名)からH列(ボタン用ラベル)までを取得
-    $range = "'管理表'!D3:H"; 
+    // A列(科目コード)からH列(ボタンラベル)まで取得範囲を拡大
+    $range = "'管理表'!A3:H"; 
     
     try {
         $response = $service->spreadsheets_values->get($spreadsheetId, $range);
@@ -83,12 +84,14 @@ function getManagementTags($service) {
         $tags = [];
         if (!empty($values)) {
             foreach ($values as $row) {
-                // $row[0]=D列, $row[3]=G列, $row[4]=H列
-                if (isset($row[0]) && trim($row[0]) !== '') {
+                // $row[0]=A列(科目コード), $row[5]=F列(ファイル名), $row[6]=G列(キーワード), $row[7]=H列(ラベル)
+                // 単元名(D列=$row[3])が存在する場合のみ処理
+                if (isset($row[3]) && trim($row[3]) !== '') {
                     $tags[] = [
-                        'video_title' => trim($row[0]),      // D列：動画タイトル（リンク用）
-                        'keywords'    => $row[3] ?? '',      // G列：判定用キーワード
-                        'button_label' => $row[4] ?? ''      // H列：ボタンに表示する短い名前
+                        // player.phpに渡すためのパス "SOC/SOC001.mp4" を作成
+                        'video_path'   => ($row[0] ?? '') . '/' . ($row[5] ?? ''),
+                        'keywords'     => $row[6] ?? '',      // G列
+                        'button_label' => $row[7] ?? ''       // H列
                     ];
                 }
             }
@@ -397,15 +400,13 @@ $(function() {
             let fullText = ($container.attr('data-alltext') || "").replace(/\s+/g, "");
             
             VIDEO_TAGS.forEach(tagObj => {
-                const videoTitle = tagObj.video_title;  // D列
+                const videoPath = tagObj.video_path;    // 作成したパス
                 const rawKeywords = tagObj.keywords;    // G列
-                const buttonLabel = tagObj.button_label || videoTitle; // H列
+                const buttonLabel = tagObj.button_label || "動画解説"; // H列
 
                 let keywordList = [];
                 if (rawKeywords && rawKeywords.trim() !== "") {
                     keywordList = rawKeywords.split(/[、,]/);
-                } else {
-                    keywordList = [videoTitle];
                 }
 
                 const isMatch = keywordList.some(k => {
@@ -414,8 +415,9 @@ $(function() {
                 });
 
                 if (isMatch) {
+                    // リンク先を player.php?video=... に変更
                     $container.append(`
-                        <a href="video_app/index.php?category=${encodeURIComponent(videoTitle)}" target="_blank" class="no-ruby" 
+                        <a href="video_app/player.php?video=${encodeURIComponent(videoPath)}" target="_blank" class="no-ruby" 
                            style="padding:6px 14px; background:#FF9800; color:white; border-radius:20px; 
                                   cursor:pointer; font-weight:bold; text-decoration:none; font-size:11px; 
                                   display:inline-flex; align-items:center; gap:4px; transition: 0.3s; margin-right:4px; margin-bottom:4px;">
@@ -426,7 +428,7 @@ $(function() {
             });
         });
     }
-
+    
     // 実行指示
     setupVideoButtons();
     setTimeout(setupVideoButtons, 500);
