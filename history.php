@@ -12,11 +12,11 @@ use Google\Client;
 use Google\Service\Sheets;
 
 try {
-    // ▼ DB接続
+    // ▼ 1. DB接続
     $pdo = new PDO("mysql:host=db;dbname=exam_app;charset=utf8mb4", "exam_user", "exam_pass");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // ▼ 履歴取得
+    // ▼ 2. 履歴取得
     $query = "SELECT h.*, u.username FROM history h JOIN users u ON h.user_id = u.id WHERE h.user_id=?";
     $params = [$userId];
     if ($subject) {
@@ -28,21 +28,23 @@ try {
     $stmt->execute($params);
     $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // ▼ 科目別集計
+    // ▼ 3. 科目別集計
     $stmt = $pdo->prepare("
-        SELECT h.subject, SUM(h.is_correct) AS correct, COUNT(*) AS total
+        SELECT h.subject, 
+               SUM(CASE WHEN h.is_correct = 1 THEN 1 ELSE 0 END) AS correct, 
+               COUNT(*) AS total
         FROM history h WHERE h.user_id=? GROUP BY h.subject
     ");
     $stmt->execute([$userId]);
     $subjectStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // ▼ Google Sheets 設定
+    // ▼ 4. 辞書データのみ取得 (グラフには影響しないが script.js で使用)
+    // ここは短時間で終わるため残します。もしここも重いならさらに削ります。
     $client = new Google\Client();
     $client->setAuthConfig(__DIR__ . '/credentials.json');
     $client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
     $service = new Google\Service\Sheets($client);
-
-    // ▼ 辞書データの取得
+    
     try {
         $dictResponse = $service->spreadsheets_values->get('1LDr4Acf_4SE-Wzp-ypPxM6COZdOt2QYumak8hIVVdxo', 'dictionary_upload!A2:B');
         $dictValues = $dictResponse->getValues() ?? [];
@@ -53,41 +55,17 @@ try {
         $dictJson = json_encode($dictMap, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) { $dictJson = '{}'; }
 
-    $sheetId = '1wBLqdju-BmXS--aPCMMC3PipvCpBFXmdVemT0X2rKew';
-    $subjectsInHistory = array_unique(array_column($records, 'subject'));
+    // ▼ 5. 重要な変更：詳細データ(questionMap)はここでは取得しない
+    $questionMap = []; 
 
     if (!function_exists('norm_id')) {
         function norm_id($s) { return strtoupper(mb_convert_kana(trim((string)$s), 'as')); }
     }
 
-    $questionMap = [];
-    foreach ($subjectsInHistory as $tabName) {
-        if (!$tabName) continue;
-        $cacheKey = "subject_data_" . $tabName;
-        if (isset($_SESSION[$cacheKey]) && $_SESSION[$cacheKey]['expires'] > time()) {
-            $sheetValues = $_SESSION[$cacheKey]['data'];
-        } else {
-            try {
-                $range = $tabName . '!A2:I';
-                $sheetResponse = $service->spreadsheets_values->get($sheetId, $range);
-                $sheetValues = $sheetResponse->getValues() ?? [];
-                $_SESSION[$cacheKey] = ['data' => $sheetValues, 'expires' => time() + 600];
-            } catch (Exception $e) { continue; }
-        }
-        foreach ($sheetValues as $row) {
-            $qid = isset($row[0]) ? norm_id($row[0]) : '';
-            if ($qid !== '') {
-                $questionMap[$qid] = [
-                    'text'    => $row[1] ?? '',
-                    'choices' => array_map('trim', array_slice($row, 2, 5)),
-                    'correct' => isset($row[7]) ? trim($row[7]) : '',
-                    'explain' => $row[8] ?? '',
-                    'subject' => $tabName
-                ];
-            }
-        }
-    }
-} catch (PDOException $e) { die("DBエラー: " . htmlspecialchars($e->getMessage())); }
+} catch (Exception $e) { 
+    die("エラーが発生しました: " . htmlspecialchars($e->getMessage())); 
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -113,21 +91,7 @@ try {
         </div>
     </div>
 
-    <div class="card-style" style="margin-bottom: 30px;">
-        <h2>科目別正解率一覧</h2>
-        <table>
-          <tr><th>科目</th><th>正解数</th><th>総数</th><th>正解率</th></tr>
-          <?php foreach ($subjectStats as $stats): ?>
-            <?php $acc = $stats["total"] > 0 ? round(($stats["correct"] / $stats["total"]) * 100, 1) : 0; ?>
-            <tr>
-              <td><?php echo htmlspecialchars($stats["subject"]); ?></td>
-              <td><?php echo (int)$stats["correct"]; ?></td>
-              <td><?php echo (int)$stats["total"]; ?></td>
-              <td><?php echo $acc; ?>%</td>
-            </tr>
-          <?php endforeach; ?>
-        </table>
-    </div>
+    
   <?php endif; ?>
 
   <?php if (!empty($records)): ?>
@@ -172,30 +136,8 @@ try {
                 </tr>
                 <tr id="detail-<?php echo $id; ?>" class="detail-row" style="display:none">
                   <td colspan="9">
-                    <div class="detail-content" style="padding:15px; background:#f9f9f9; border-radius:8px; text-align:left;">
-                        <?php if ($q): ?>
-                          <div style="margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
-                            <span class="exam-badge" style="background:#e3f2fd; color:#1976d2; padding:2px 8px; border-radius:4px; font-weight:bold;"><?php echo $dispEx; ?></span>
-                            <span style="margin-left:10px; color:#666; font-size:0.85em;">[科目: <?php echo htmlspecialchars($q['subject']); ?>]</span>
-                          </div>
-                          <div class="content-ruby">
-                            <strong>問題文:</strong> <?php echo htmlspecialchars($q['text']); ?><br>
-                            <ul style="margin: 10px 0; list-style:none; padding-left:0;">
-                              <?php foreach ($q['choices'] as $idx => $ch): ?>
-                                <li style="margin-bottom:5px; <?php echo ($idx+1 == (int)$q['correct']) ? 'color:#d9534f; font-weight:bold;' : ''; ?>">
-                                  <?php echo ($idx+1); ?>. <?php echo htmlspecialchars($ch); ?>
-                                  <?php if($idx+1 == (int)$row["answer"]) echo " ← あなたの回答"; ?>
-                                </li>
-                              <?php endforeach; ?>
-                            </ul>
-                            <strong>💡 解説:</strong> 
-                            <div style="margin-top:5px; padding:10px; background:#fff9c4; border-radius:4px; border-left:4px solid #fbc02d;">
-                                <?php echo htmlspecialchars($q['explain']); ?>
-                            </div>
-                          </div>
-                        <?php else: ?>
-                          <strong>詳細未取得:</strong> question_id=<?php echo $qidEsc; ?> のデータが見つかりませんでした。
-                        <?php endif; ?>
+                    <div class="detail-content not-loaded" style="padding:15px; background:#f9f9f9; border-radius:8px; text-align:left;">
+                        ⌛ 読み込み待機中...
                     </div>
                   </td>
                 </tr>
@@ -207,66 +149,99 @@ try {
     <p>まだ履歴はありません。</p>
   <?php endif; ?>
 
-
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>window.dictMap = <?php echo $dictJson ?? '{}'; ?>;</script>
 <script src="script.js"></script>
 
 <script>
 $(function() {
-    // 1. 詳細表示の切り替え
-    $(".show-detail").on("click", function() {
-        const targetId = $(this).data("target");
-        const $detailRow = $("#" + targetId);
-        $detailRow.toggle();
-        if ($detailRow.is(":visible") && typeof window.applyRuby === "function") {
-            const $target = $detailRow.find('.content-ruby');
-            window.applyRuby($target[0]);
-            window.applyRubyVisibility($target);
+    // --- A. グラフ描画コード (ここが消えていました) ---
+    try {
+        const statsData = <?php echo json_encode($subjectStats); ?>;
+        if (statsData && statsData.length > 0) {
+            const labels = statsData.map(item => item.subject || '未分類');
+            const accuracyData = statsData.map(item => {
+                return item.total > 0 ? ((item.correct / item.total) * 100).toFixed(1) : 0;
+            });
+            const canvas = document.getElementById('subjectChart');
+            if (canvas) {
+                new Chart(canvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '正解率 (%)',
+                            data: accuracyData,
+                            backgroundColor: 'rgba(33, 150, 243, 0.6)',
+                            borderColor: 'rgba(33, 150, 243, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { x: { beginAtZero: true, max: 100 } }
+                    }
+                });
+            }
         }
-    });
+    } catch (e) { console.error("Chart error:", e); }
 
-    // 2. グラフ描画
-    const statsData = <?php echo json_encode($subjectStats); ?>;
-    if (statsData && statsData.length > 0) {
-        const labels = statsData.map(item => item.subject);
-        const accuracyData = statsData.map(item => {
-            return item.total > 0 ? ((item.correct / item.total) * 100).toFixed(1) : 0;
-        });
+    // --- B. 確認ボタン（詳細表示）の切り替え ---
+    $(".show-detail").on("click", function() {
+        const $btn = $(this);
+        const targetId = $btn.data("target");
+        const $detailRow = $("#" + targetId);
+        const $content = $detailRow.find(".detail-content");
 
-        const ctx = document.getElementById('subjectChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '正解率 (%)',
-                    data: accuracyData,
-                    backgroundColor: 'rgba(33, 150, 243, 0.6)',
-                    borderColor: 'rgba(33, 150, 243, 1)',
-                    borderWidth: 1,
-                    borderRadius: 5
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { beginAtZero: true, max: 100, title: { display: true, text: '正解率 (%)' } }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) { return `正解率: ${context.parsed.x}%`; }
+        if ($content.hasClass("not-loaded")) {
+            const $row = $btn.closest("tr");
+            const qid = $row.find("td:eq(1)").text().trim();
+            const subject = $row.find("td:eq(6)").text().trim();
+            const yourAnswer = $row.find("td:eq(3)").text().trim();
+
+            $content.html('<div style="color:#666;">⌛ Google Sheetsから詳細を読み込み中...</div>');
+
+            $.getJSON("get_question_detail.php", { qid: qid, subject: subject })
+                .done(function(data) {
+                    if (data.error) {
+                        $content.html('<span style="color:red;">⚠️ ' + data.error + '</span>');
+                    } else {
+                        let choicesHtml = '<ul style="margin: 10px 0; list-style:none; padding-left:0;">';
+                        data.choices.forEach((ch, idx) => {
+                            if (!ch) return;
+                            const num = idx + 1;
+                            let style = (num == data.correct) ? "color:#d9534f; font-weight:bold;" : "";
+                            let label = (num == yourAnswer) ? " ← あなたの回答" : "";
+                            choicesHtml += `<li style="margin-bottom:5px; ${style}">${num}. ${ch}${label}</li>`;
+                        });
+                        choicesHtml += '</ul>';
+
+                        const html = `
+                            <div class="content-ruby">
+                                <strong>問題文:</strong> ${data.text}<br>
+                                ${choicesHtml}
+                                <strong>💡 解説:</strong> 
+                                <div style="margin-top:5px; padding:10px; background:#fff9c4; border-radius:4px; border-left:4px solid #fbc02d;">
+                                    ${data.explain}
+                                </div>
+                            </div>`;
+                        
+                        $content.html(html).removeClass("not-loaded");
+                        if (typeof window.applyRuby === "function") {
+                            window.applyRuby($content.find('.content-ruby')[0]);
                         }
                     }
-                }
-            }
-        });
-    }
+                })
+                .fail(function() {
+                    $content.html('<span style="color:red;">⚠️ 通信エラーが発生しました。</span>');
+                });
+        }
+        $detailRow.toggle();
+    });
 });
 </script>
 </body>

@@ -65,108 +65,115 @@ $client->setAuthConfig(__DIR__ . '/credentials.json');
 $client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
 $service = new Google\Service\Sheets($client);
 
+// --- STEP 1: MySQLキャッシュを確認 ---
 try {
-    // 💡 取得範囲を A2:E から A2:I に変更
-    $dictResponse = $service->spreadsheets_values->get('1LDr4Acf_4SE-Wzp-ypPxM6COZdOt2QYumak8hIVVdxo', 'dictionary_upload!A2:I');
-    $dictValues = $dictResponse->getValues() ?? [];
+    $pdo = new PDO("mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_NAME']};charset=utf8mb4", $_ENV['DB_USER'], $_ENV['DB_PASS'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
     
-    // スプレッドシート由来の翻訳を保持する変数を初期化
-    $sheetTrans = ['en' => '', 'tl' => '', 'my' => '', 'th' => ''];
+    $stmt = $pdo->prepare("SELECT * FROM dictionary_cache WHERE word = ? LIMIT 1");
+    $stmt->execute([$word]);
+    $cached = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    foreach ($dictValues as $row) {
-        $w = $row[0] ?? '';
-        $r = $row[1] ?? '';
-        if ($w !== '') {
-            $allDictData[$w] = $r; // JavaScriptのルビ振り用マップに追加
-        }
-
-        // キャッシュにない場合、現在の検索ワードの情報を抽出して保存
-        if (!$isFromCache && $w === $word) {
-            $ruby = $r;
-            $meaning = $row[2] ?? '';
-            $imageUrl = $row[4] ?? '';
-            
-            // 💡 スプレッドシートから翻訳情報を取得 (F=5, G=6, H=7, I=8)
-            $sheetTrans['en'] = $row[5] ?? '';
-            $sheetTrans['tl'] = $row[6] ?? '';
-            $sheetTrans['my'] = $row[7] ?? '';
-            $sheetTrans['th'] = $row[8] ?? '';
-
-            try {
-                $ins = $pdo->prepare("INSERT IGNORE INTO dictionary_cache (word, ruby, meaning, image_url) VALUES (?, ?, ?, ?)");
-                $ins->execute([$word, $ruby, $meaning, $imageUrl]);
-            } catch (Exception $dbE) {}
-        }
+    if ($cached) {
+        $meaning = $cached['meaning'];
+        $ruby = $cached['ruby'];
+        $imageUrl = $cached['image_url'];
+        $isFromCache = true;
     }
-} catch (Exception $e) { /* APIエラー時 */ }
+} catch (PDOException $e) { /* エラー時はスキップ */ }
 
-// --- 追加：PHP側でスマート・ルビを生成する関数 ---
-function formatSmartRuby($word, $reading) {
-    if (empty($reading) || $word === $reading) {
-        return htmlspecialchars($word);
-    }
+// --- STEP 2: Google Sheets データの取得（キャッシュ対応） ---
+$allDictData = [];
+$sheetTrans = ['en' => '', 'tl' => '', 'my' => '', 'th' => ''];
+$cacheKeyDict = 'all_dict_map';
 
-    // 文字数を取得
-    $wordLen = mb_strlen($word);
-    $readingLen = mb_strlen($reading);
-    $okuriganaLen = 0;
+// セッションに辞書全データがあればそれを使う
+if (isset($_SESSION[$cacheKeyDict]) && !empty($_SESSION[$cacheKeyDict])) {
+    $allDictData = $_SESSION[$cacheKeyDict];
+}
 
-    // 後ろから1文字ずつ比較して、一致する送り仮名の長さを調べる
-    while ($okuriganaLen < $wordLen && $okuriganaLen < $readingLen) {
-        $wChar = mb_substr($word, $wordLen - 1 - $okuriganaLen, 1);
-        $rChar = mb_substr($reading, $readingLen - 1 - $okuriganaLen, 1);
+// キャッシュがない、または検索単語の詳細が必要な場合のみ API を叩く
+if (empty($allDictData) || (!$isFromCache && !empty($word))) {
+    try {
+        $client = new Google\Client();
+        $client->setAuthConfig(__DIR__ . '/credentials.json');
+        $client->setScopes([Google\Service\Sheets::SPREADSHEETS_READONLY]);
+        $service = new Google\Service\Sheets($client);
 
-        // ひらがなが一致する場合、送り仮名とみなす
-        if ($wChar === $rChar) {
-            $okuriganaLen++;
-        } else {
-            break;
+        $dictResponse = $service->spreadsheets_values->get('1LDr4Acf_4SE-Wzp-ypPxM6COZdOt2QYumak8hIVVdxo', 'dictionary_upload!A2:I');
+        $dictValues = $dictResponse->getValues() ?? [];
+
+        foreach ($dictValues as $row) {
+            $w = $row[0] ?? '';
+            $r = $row[1] ?? '';
+            if ($w !== '') {
+                $allDictData[$w] = $r;
+            }
+
+            // 現在の検索ワードに一致した場合、詳細を取得
+            if (!$isFromCache && $w === $word) {
+                $ruby = $r;
+                $meaning = $row[2] ?? '';
+                $imageUrl = $row[4] ?? '';
+                $sheetTrans['en'] = $row[5] ?? '';
+                $sheetTrans['tl'] = $row[6] ?? '';
+                $sheetTrans['my'] = $row[7] ?? '';
+                $sheetTrans['th'] = $row[8] ?? '';
+
+                // MySQLにキャッシュ保存
+                try {
+                    $ins = $pdo->prepare("INSERT IGNORE INTO dictionary_cache (word, ruby, meaning, image_url) VALUES (?, ?, ?, ?)");
+                    $ins->execute([$word, $ruby, $meaning, $imageUrl]);
+                } catch (Exception $dbE) {}
+            }
         }
-    }
+        // 全辞書データをセッションに保存（1時間有効とするため、別途有効期限管理も可）
+        $_SESSION[$cacheKeyDict] = $allDictData;
 
-    if ($okuriganaLen > 0 && $okuriganaLen < $wordLen) {
-        // 送り仮名を分離してルビを振る
-        // 例：「行い」「おこない」 → <ruby>行<rt>おこな</rt></ruby>い
-        $baseKanji = mb_substr($word, 0, $wordLen - $okuriganaLen);
-        $rubyPart  = mb_substr($reading, 0, $readingLen - $okuriganaLen);
-        $okurigana = mb_substr($word, $wordLen - $okuriganaLen);
+    } catch (Exception $e) { /* APIエラー時 */ }
+}
 
-        return "<ruby>" . htmlspecialchars($baseKanji) . "<rt>" . htmlspecialchars($rubyPart) . "</rt></ruby>" . htmlspecialchars($okurigana);
-    } else {
-        // 送り仮名がない、または全て一致（ひらがなのみ等）の場合
-        return "<ruby>" . htmlspecialchars($word) . "<rt>" . htmlspecialchars($reading) . "</rt></ruby>";
+// --- 追加：スマート・ルビ生成関数 (変更なし) ---
+if (!function_exists('formatSmartRuby')) {
+    function formatSmartRuby($word, $reading) {
+        if (empty($reading) || $word === $reading) return htmlspecialchars($word);
+        $wordLen = mb_strlen($word);
+        $readingLen = mb_strlen($reading);
+        $okuriganaLen = 0;
+        while ($okuriganaLen < $wordLen && $okuriganaLen < $readingLen) {
+            if (mb_substr($word, $wordLen-1-$okuriganaLen, 1) === mb_substr($reading, $readingLen-1-$okuriganaLen, 1)) {
+                $okuriganaLen++;
+            } else { break; }
+        }
+        if ($okuriganaLen > 0 && $okuriganaLen < $wordLen) {
+            $base = mb_substr($word, 0, $wordLen - $okuriganaLen);
+            $rt = mb_substr($reading, 0, $readingLen - $okuriganaLen);
+            $okuri = mb_substr($word, $wordLen - $okuriganaLen);
+            return "<ruby>".htmlspecialchars($base)."<rt>".htmlspecialchars($rt)."</rt></ruby>".htmlspecialchars($okuri);
+        }
+        return "<ruby>".htmlspecialchars($word)."<rt>".htmlspecialchars($reading)."</rt></ruby>";
     }
 }
 
-// ▼ 翻訳実行（修正版：スプレッドシート優先）
-$translations = [
-    'en' => !empty($sheetTrans['en']) ? $sheetTrans['en'] : translateText($word, 'en'),
-    'tl' => !empty($sheetTrans['tl']) ? $sheetTrans['tl'] : translateText($word, 'tl'),
-    'my' => !empty($sheetTrans['my']) ? $sheetTrans['my'] : translateText($word, 'my'),
-    'th' => !empty($sheetTrans['th']) ? $sheetTrans['th'] : translateText($word, 'th')
-];
+// ▼ 翻訳実行（スプレッドシートにデータがあれば Translate API を飛ばさない）
+$translations = [];
+foreach (['en', 'tl', 'my', 'th'] as $lang) {
+    if (!empty($sheetTrans[$lang])) {
+        $translations[$lang] = $sheetTrans[$lang];
+    } elseif (!empty($word)) {
+        // APIを叩く前に念のため word があるかチェック
+        $translations[$lang] = translateText($word, $lang);
+    } else {
+        $translations[$lang] = '';
+    }
+}
 $translationsJson = json_encode($translations, JSON_UNESCAPED_UNICODE);
 
-// ▼ 履歴保存（修正版：多言語JSON対応）
+// ▼ 履歴保存（変更なし）
 if (!empty($word) && !empty($meaning) && $userId > 0) {
     try {
-        // translations カラムに JSON を流し込む
-        $stmt = $pdo->prepare("
-            INSERT INTO searched_words 
-            (user_id, word, meaning, subject, translations, created_at) 
-            VALUES (?, ?, ?, ?, ?, NOW())
-        ");
-        
-        $stmt->execute([
-            $userId, 
-            $word, 
-            $meaning, 
-            $subject, 
-            json_encode($translations, JSON_UNESCAPED_UNICODE) // 全言語をJSON化
-        ]);
-    } catch (PDOException $e) {
-        // カラムが未作成だとここでエラーになります
-    }
+        $stmt = $pdo->prepare("INSERT INTO searched_words (user_id, word, meaning, subject, translations, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+        $stmt->execute([$userId, $word, $meaning, $subject, $translationsJson]);
+    } catch (PDOException $e) {}
 }
 
 ?>
