@@ -19,7 +19,7 @@ $client->setAccessType('offline');
 $service = new Sheets($client);
 
 $spreadsheetId = '1evXOkxn2Pjpv9vXr95jMknI8UGK3IxXP1FbvWSeQIKY';
-$range = '管理表!A3:F100';
+$range = '管理表!A2:F100';
 $response = $service->spreadsheets_values->get($spreadsheetId, $range);
 $values = $response->getValues();
 
